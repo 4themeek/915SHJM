@@ -253,7 +253,7 @@ export default function HolySpiritPage() {
       {/* SAINTS */}
       <section className={styles.saintsSection}>
         <div className={styles.saintsInner}>
-          <h2 className={styles.sectionTitleLight}>The Saints on the Holy Spirit</h2>
+          <h2 className={styles.sectionTitleLight}>Witnesses to the Holy Spirit</h2>
           <p className={styles.sectionSubLight}>Eight centuries of theological witness</p>
           <div className={styles.saintsGrid}>
             {SAINTS.map((s, i) => (
