@@ -1,0 +1,454 @@
+/* HERO */
+.hero {
+  position: relative;
+  background: linear-gradient(180deg, #0D1829 0%, #1A2744 35%, #3D0A0A 100%);
+  min-height: 85vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 0;
+  overflow: hidden;
+  border-bottom: 2px solid var(--gold);
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23C9A84C' fill-opacity='0.03'%3E%3Cpath d='M40 40L20 20h40L40 40zm0 0L20 60h40L40 40z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.heroArt {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem 3rem 3rem;
+}
+
+.coronationSvg {
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  filter: drop-shadow(0 8px 40px rgba(201, 168, 76, 0.25));
+}
+
+.heroText {
+  position: relative;
+  z-index: 1;
+  padding: 3rem 3rem 3rem 2rem;
+}
+
+.heroEyebrow {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  opacity: 0.85;
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  color: var(--gold);
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+  line-height: 1.1;
+}
+
+.heroSub {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.15em;
+  color: rgba(201, 168, 76, 0.7);
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+
+.heroDesc {
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  color: var(--parchment);
+  line-height: 1.85;
+  font-style: italic;
+}
+
+/* TRINITY BOX */
+.trinityBox {
+  background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+  border: 1px solid var(--gold);
+  padding: 2rem;
+  margin: 2.5rem 0;
+}
+
+.trinityLabel {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.trinityRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.trinityItem {
+  text-align: center;
+}
+
+.trinityIcon {
+  font-size: 1.5rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--gold);
+}
+
+.trinityName {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+
+.trinityDesc {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: rgba(237, 224, 200, 0.7);
+  line-height: 1.5;
+  font-style: italic;
+  margin: 0;
+}
+
+/* SCRIPTURE SECTION */
+.scriptureSection {
+  background: var(--cream-dark);
+  padding: 5rem 2rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.scriptureInner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  color: var(--crimson);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  text-align: center;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.sectionSub {
+  font-family: var(--font-body);
+  color: var(--muted);
+  font-size: 1.05rem;
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.sectionTitleLight {
+  font-family: var(--font-display);
+  color: var(--gold);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  text-align: center;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.sectionSubLight {
+  font-family: var(--font-body);
+  color: rgba(237, 224, 200, 0.65);
+  font-size: 1.05rem;
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.scriptureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.scriptureCard {
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 1.75rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.scriptureCard:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 20px rgba(26, 39, 68, 0.08);
+}
+
+.scriptureRef {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.scriptureText {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.scriptureNote {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.6;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+  margin: 0;
+}
+
+/* SAINTS SECTION */
+.saintsSection {
+  background: linear-gradient(180deg, var(--navy-dark) 0%, #2A0A0A 100%);
+  padding: 5rem 2rem;
+  border-top: 2px solid var(--gold);
+  border-bottom: 2px solid var(--gold);
+}
+
+.saintsInner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.saintsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.saintCard {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(201, 168, 76, 0.35);
+  padding: 2rem;
+  transition: border-color 0.2s;
+}
+
+.saintCard:hover {
+  border-color: var(--gold);
+}
+
+.saintHeader {
+  margin-bottom: 1.25rem;
+}
+
+.saintName {
+  font-family: var(--font-display);
+  color: var(--gold);
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.3rem;
+}
+
+.saintRole {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: rgba(201, 168, 76, 0.6);
+  text-transform: uppercase;
+}
+
+.saintQuote {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--parchment);
+  line-height: 1.75;
+  border-left: 2px solid var(--gold);
+  padding-left: 1rem;
+  margin: 0 0 1.25rem 0;
+}
+
+.saintContext {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: rgba(237, 224, 200, 0.65);
+  line-height: 1.75;
+  margin: 0;
+}
+
+/* GIFTS */
+.giftsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.giftCard {
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 1.5rem 1.25rem;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.giftCard:hover {
+  border-color: var(--gold);
+}
+
+.giftNum {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--gold);
+  opacity: 0.4;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.giftName {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  color: var(--navy);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.giftDesc {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.6;
+  font-style: italic;
+  margin: 0;
+}
+
+/* PENTECOST QUOTE */
+.pentecostQuote {
+  background: var(--cream-dark);
+  border-left: 3px solid var(--gold);
+  padding: 2rem 2.5rem;
+  margin: 2rem 0;
+}
+
+/* CTA */
+.ctaRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin: 2.5rem 0;
+}
+
+.ctaCard {
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.ctaCard:hover {
+  border-color: var(--gold);
+}
+
+.ctaIcon {
+  font-size: 1.5rem;
+  color: var(--gold);
+  margin-bottom: 0.75rem;
+}
+
+.ctaCard h4 {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.ctaCard p {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+.ctaBtn {
+  background: var(--crimson);
+  color: #fff;
+  padding: 0.6rem 1.25rem;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.2s;
+}
+
+.ctaBtn:hover {
+  background: var(--crimson-light);
+}
+
+/* CLOSING QUOTE */
+.closingQuote {
+  background: var(--cream-dark);
+  border-left: 3px solid var(--gold);
+  padding: 2rem 2.5rem;
+  margin-top: 2.5rem;
+}
+
+.quoteText {
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  font-style: italic;
+  color: var(--ink-soft);
+  line-height: 1.85;
+  margin-bottom: 0.75rem !important;
+}
+
+.quoteAttrib {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .heroArt {
+    padding: 2rem 2rem 1rem;
+  }
+  .heroText {
+    padding: 1rem 2rem 3rem;
+  }
+  .trinityRow {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .coronationSvg {
+    max-width: 340px;
+  }
+}

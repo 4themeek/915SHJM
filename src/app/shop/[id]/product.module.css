@@ -1,0 +1,203 @@
+.breadcrumb {
+  background: var(--cream-dark);
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.back {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.back:hover {
+  color: var(--navy);
+}
+
+.breadSep {
+  margin: 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.breadCurrent {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--gold-dark);
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: start;
+  margin-bottom: 5rem;
+}
+
+.imgCol {}
+
+.imgWrap {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.infoCol {}
+
+.cat {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 3vw, 1.7rem);
+  color: var(--navy);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+.price {
+  font-family: var(--font-body);
+  font-size: 1.4rem;
+  color: var(--crimson);
+  margin-bottom: 1.5rem;
+  font-style: italic;
+}
+
+.desc {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+  line-height: 1.8;
+  margin-bottom: 2rem;
+}
+
+.btnAdd,
+.btnDisabled,
+.btnNav {
+  width: 100%;
+  padding: 1rem 2rem;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.2s;
+  margin-bottom: 1rem;
+}
+
+.btnAdd {
+  background: var(--crimson);
+  color: #fff;
+}
+
+.btnAdd:hover {
+  background: var(--crimson-light);
+}
+
+.btnDisabled {
+  background: #bbb;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.btnNav {
+  background: var(--navy);
+  color: var(--gold);
+}
+
+.btnNav:hover {
+  background: var(--navy-dark);
+}
+
+.footnote {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.trustBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.trustBadges span {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+}
+
+.related {
+  border-top: 1px solid var(--border);
+  padding-top: 3rem;
+}
+
+.relatedGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.relatedCard {
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s;
+}
+
+.relatedCard:hover {
+  opacity: 0.8;
+}
+
+.relatedImg {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.relatedName {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ink);
+  line-height: 1.35;
+  margin-bottom: 0.25rem;
+}
+
+.relatedPrice {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: var(--crimson);
+}
+
+@media (max-width: 768px) {
+  .detail {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}

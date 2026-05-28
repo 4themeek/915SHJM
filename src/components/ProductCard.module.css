@@ -1,0 +1,134 @@
+.card {
+  background: #fff;
+  border: 1px solid var(--border);
+  transition: all 0.25s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+}
+
+.card:hover {
+  border-color: var(--gold);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(26, 39, 68, 0.12);
+}
+
+.imgWrap {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  overflow: hidden;
+  background: var(--cream-dark);
+}
+
+.img {
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.card:hover .img {
+  transform: scale(1.03);
+}
+
+.saleBadge,
+.outBadge {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.5rem;
+  z-index: 2;
+  text-transform: uppercase;
+}
+
+.saleBadge {
+  background: var(--crimson);
+  color: #fff;
+}
+
+.outBadge {
+  background: var(--muted);
+  color: #fff;
+  left: auto;
+  right: 0.75rem;
+}
+
+.body {
+  padding: 1rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.cat {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+
+.name {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.35;
+  margin-bottom: 0.5rem;
+  flex: 1;
+}
+
+.price {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--crimson);
+  margin-bottom: 1rem;
+}
+
+.btnAdd,
+.btnDisabled,
+.btnNav {
+  width: 100%;
+  padding: 0.65rem;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  display: block;
+  transition: background 0.2s;
+  border: none;
+}
+
+.btnAdd {
+  background: var(--crimson);
+  color: #fff;
+  cursor: pointer;
+}
+
+.btnAdd:hover {
+  background: var(--crimson-light);
+}
+
+.btnDisabled {
+  background: #bbb;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.btnNav {
+  background: var(--navy);
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.btnNav:hover {
+  background: var(--navy-dark);
+}

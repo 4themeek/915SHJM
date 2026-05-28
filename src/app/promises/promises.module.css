@@ -1,0 +1,223 @@
+.ornament {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 3rem auto;
+  max-width: 300px;
+}
+
+.ornamentLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+.ornamentCross {
+  color: var(--gold);
+  font-size: 0.9rem;
+  letter-spacing: 0.3em;
+}
+
+/* PROMISES SECTION */
+.promisesSection {
+  background: linear-gradient(180deg, var(--cream-dark) 0%, #fff 100%);
+  padding: 5rem 2rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.promisesInner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.promisesTitle {
+  font-family: var(--font-display);
+  color: var(--crimson);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  text-align: center;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.promisesSub {
+  font-family: var(--font-body);
+  color: var(--muted);
+  font-size: 1.05rem;
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 2rem;
+  position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 20px rgba(26, 39, 68, 0.08);
+}
+
+.great {
+  background: linear-gradient(135deg, var(--navy-dark) 0%, var(--crimson-dark) 100%);
+  border-color: var(--gold) !important;
+  grid-column: 1 / -1;
+  padding: 2.5rem 3rem;
+}
+
+.number {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--gold);
+  opacity: 0.4;
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.great .number {
+  opacity: 1;
+  font-size: 1.5rem;
+}
+
+.greatLabel {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.promise {
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.great .promise {
+  color: var(--parchment);
+  font-size: 1.15rem;
+}
+
+.reflection {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--muted);
+  line-height: 1.7;
+  border-top: 1px solid var(--border);
+  padding-top: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.great .reflection {
+  color: rgba(237, 224, 200, 0.7);
+  border-top-color: rgba(201, 168, 76, 0.3);
+}
+
+/* CTA CARDS */
+.ctaRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin: 2.5rem 0;
+}
+
+.ctaCard {
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.ctaCard:hover {
+  border-color: var(--gold);
+}
+
+.ctaIcon {
+  font-size: 1.5rem;
+  color: var(--gold);
+  margin-bottom: 0.75rem;
+}
+
+.ctaCard h4 {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.ctaCard p {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+.ctaBtn {
+  background: var(--crimson);
+  color: #fff;
+  padding: 0.6rem 1.25rem;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.2s;
+}
+
+.ctaBtn:hover {
+  background: var(--crimson-light);
+}
+
+/* QUOTE */
+.quoteBlock {
+  background: var(--cream-dark);
+  border-left: 3px solid var(--gold);
+  padding: 2rem 2.5rem;
+  margin: 2.5rem 0 0;
+}
+
+.quoteText {
+  font-family: var(--font-body);
+  font-size: 1.2rem;
+  font-style: italic;
+  color: var(--ink-soft);
+  line-height: 1.8;
+  margin-bottom: 0.75rem !important;
+}
+
+.quoteAttrib {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 640px) {
+  .great {
+    padding: 2rem 1.5rem;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
