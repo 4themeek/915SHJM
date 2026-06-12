@@ -3,7 +3,7 @@
 .introText h2 { font-family: var(--font-display); color: var(--navy); font-size: 1.3rem; letter-spacing: 0.05em; margin-bottom: 1rem; }
 .introText p { font-family: var(--font-body); font-size: 1.05rem; line-height: 1.85; color: var(--ink-soft); margin-bottom: 1rem; }
 .introImg { position: relative; height: 420px; border: 1px solid var(--border); overflow: hidden; }
-.featureSection { position: relative; height: 500px; overflow: hidden; border-top: 2px solid var(--gold); border-bottom: 2px solid var(--gold); }
+.featureSection { position: relative; height: 875px; overflow: hidden; border-top: 2px solid var(--gold); border-bottom: 2px solid var(--gold); }
 .featureImg { position: relative; width: 100%; height: 100%; }
 .featureOverlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.55) 100%); }
 .featureCaption { position: absolute; bottom: 2.5rem; left: 0; right: 0; text-align: center; z-index: 2; padding: 0 2rem; }
@@ -31,5 +31,5 @@
   .introGrid, .missionGrid, .collectionGrid, .papalGrid { grid-template-columns: 1fr; gap: 2rem; }
   .introImg, .missionImg, .collectionImg { height: 280px; }
   .papalImg { height: 340px; }
-  .featureSection { height: 320px; }
+  .featureSection { height: 560px; }
 }
