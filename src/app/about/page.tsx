@@ -87,7 +87,7 @@ export default function AboutPage() {
         <p>We are a registered 501(c)3 nonprofit organization. Every purchase made through our shop is a tax-deductible donation that goes directly back to supporting and expanding our ministry. We are grateful for every order and every prayer offered on our behalf.</p>
         <div style={{ background: 'var(--cream-dark)', border: '1px solid var(--border)', padding: '1.5rem 2rem', margin: '2rem 0' }}>
           <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.72rem', letterSpacing: '0.08em', color: 'var(--navy)', marginBottom: '0.5rem' }}>Visit or Contact Us</p>
-          <p>5440 Moeller Avenue, Suite 101, Cincinnati, OH 45212<br /><a href="mailto:info@thesacredhearts.org" style={{ color: 'var(--crimson)' }}>info@thesacredhearts.org</a>&nbsp;·&nbsp;<a href="tel:5137413400" style={{ color: 'var(--crimson)' }}>513.741.3400</a><br />Monday – Friday, 10am – 5pm EST</p>
+          <p>Tom & Terry Hale, 5440 Moeller Avenue, Suite 101, Cincinnati, OH 45212<br /><a href="mailto:info@thesacredhearts.org" style={{ color: 'var(--crimson)' }}>info@thesacredhearts.org</a>&nbsp;·&nbsp;<a href="tel:5137413400" style={{ color: 'var(--crimson)' }}>513.741.3400</a><br />Monday – Friday, 10am – 5pm EST</p>
         </div>
         <div style={{ textAlign: 'center', marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/shop" className="btn-crimson">View Our Collection</Link>
