@@ -31,7 +31,7 @@ export default function Footer() {
         </div>
         <div className={styles.col}>
           <h4>Contact</h4>
-          <p>Tom & Terry Hale<br /> 5440 Moeller Avenue<br />Suite 101<br />Cincinnati, OH 45212</p>
+          <p>5440 Moeller Avenue<br />Suite 101<br />Cincinnati, OH 45212</p>
           <p><a href="mailto:info@thesacredhearts.org">info@thesacredhearts.org</a></p>
           <p><a href="tel:5137413400">513.741.3400</a></p>
           <p className={styles.hours}>Mon–Fri, 10am–5pm EST</p>

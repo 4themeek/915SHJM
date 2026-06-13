@@ -420,3 +420,14 @@ export const CATEGORIES = [
   "All",
   ...Array.from(new Set(PRODUCTS.map((p) => p.cat))),
 ];
+
+// Weight in ounces for shipping calculations
+// Small prints: ~4oz, Medium prints: ~8oz, Large prints/plaques: ~16oz, Heavy plaques: ~32oz
+export const PRODUCT_WEIGHTS: Record<number, number> = {
+  1: 32, 2: 32, 3: 16, 4: 8, 5: 16, 6: 48, 7: 16, 8: 32,
+  9: 12, 10: 8, 11: 4, 12: 32, 13: 12, 14: 16, 15: 10,
+  16: 10, 17: 12, 18: 8, 19: 8, 20: 48, 21: 8, 22: 12,
+  23: 6, 24: 6, 25: 6, 26: 2, 27: 4, 28: 6, 29: 6,
+  30: 6, 31: 6, 32: 6, 33: 4, 34: 8, 35: 6, 36: 6,
+  37: 16, 38: 16, 39: 8,
+};
