@@ -3,7 +3,7 @@
   border-bottom: 2px solid var(--gold);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 200;
 }
 
 .inner {
@@ -13,9 +13,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 62px;
+  height: 64px;
 }
 
+/* LOGO — extra right margin to push links away */
 .logo {
   font-family: var(--font-display);
   color: var(--gold);
@@ -24,26 +25,32 @@
   letter-spacing: 0.05em;
   text-decoration: none;
   transition: opacity 0.2s;
+  flex-shrink: 0;
+  margin-right: 2.5rem;
 }
 
 .logo:hover {
   opacity: 0.85;
 }
 
+/* DESKTOP LINKS */
 .links {
   display: flex;
-  gap: 1.75rem;
+  gap: 1.5rem;
   align-items: center;
+  flex: 1;
+  justify-content: flex-end;
 }
 
 .link {
   color: var(--parchment);
   font-family: var(--font-display);
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: none;
   transition: color 0.2s;
+  white-space: nowrap;
 }
 
 .link:hover {
@@ -61,23 +68,195 @@
   cursor: pointer;
   font-weight: 600;
   transition: background 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .cartBtn:hover {
   background: var(--gold-light);
 }
 
-@media (max-width: 768px) {
-  .links {
-    gap: 0.75rem;
-  }
-  .link {
-    font-size: 0.62rem;
-  }
+/* MOBILE RIGHT — hidden on desktop */
+.mobileRight {
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-@media (max-width: 500px) {
+.cartBtnMobile {
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  padding: 0.4rem 0.9rem;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.cartBtnMobile:hover {
+  background: var(--gold-light);
+}
+
+/* HAMBURGER BUTTON */
+.hamburger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+}
+
+.bar {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--gold);
+  transition: all 0.25s ease;
+  transform-origin: center;
+}
+
+.barOpen1 {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.barOpen2 {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.barOpen3 {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* MOBILE OVERLAY */
+.mobileOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 198;
+}
+
+/* MOBILE MENU DRAWER */
+.mobileMenu {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(300px, 85vw);
+  background: var(--navy-dark);
+  border-left: 2px solid var(--gold);
+  z-index: 199;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.mobileMenuOpen {
+  transform: translateX(0) !important;
+}
+
+.mobileMenuHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--gold);
+  background: var(--navy);
+}
+
+.mobileMenuTitle {
+  font-family: var(--font-display);
+  color: var(--gold);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+}
+
+.mobileClose {
+  background: none;
+  border: none;
+  color: var(--parchment);
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.25rem;
+}
+
+.mobileLinks {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+}
+
+.mobileLink {
+  color: var(--parchment);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.15);
+  transition: all 0.2s;
+  display: block;
+}
+
+.mobileLink:hover {
+  color: var(--gold);
+  background: rgba(201, 168, 76, 0.05);
+  padding-left: 2rem;
+}
+
+.mobileCartBtn {
+  margin: 1.5rem;
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  padding: 0.9rem;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-transform: uppercase;
+}
+
+.mobileCartBtn:hover {
+  background: var(--gold-light);
+}
+
+/* ── RESPONSIVE BREAKPOINTS ── */
+
+/* Hide desktop links, show hamburger below 900px */
+@media (max-width: 900px) {
+  .links {
+    display: none;
+  }
+
+  .mobileRight {
+    display: flex;
+  }
+
+  .mobileMenu {
+    display: flex;
+  }
+
+  .mobileOverlay {
+    display: block;
+  }
+
   .logo {
-    font-size: 0.85rem;
+    margin-right: 0;
   }
 }
