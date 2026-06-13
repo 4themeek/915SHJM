@@ -1,15 +1,17 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/lib/cart-context';
-
 import styles from './CartDrawer.module.css';
 
 export default function CartDrawer() {
   const { cart, isOpen, closeCart, changeQty, removeFromCart, cartTotal } = useCart();
+  const router = useRouter();
 
   function handleCheckout() {
-    window.location.href = '/checkout';
+    closeCart();
+    router.push('/checkout');
   }
 
   return (
@@ -65,7 +67,7 @@ export default function CartDrawer() {
               <span>from ${cartTotal.toFixed(2)}</span>
             </div>
             <button className={styles.checkoutBtn} onClick={handleCheckout}>
-              Proceed to Checkout via Stripe
+              Proceed to Checkout
             </button>
             <p className={styles.note}>Secure checkout · All major cards accepted</p>
           </div>
