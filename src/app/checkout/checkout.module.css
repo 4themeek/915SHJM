@@ -679,3 +679,172 @@
   .card { padding: 1.5rem; }
   .formRow { flex-direction: column; gap: 0; }
 }
+
+/* ADDRESS VALIDATION ERRORS */
+.validationError {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-left: 4px solid var(--crimson);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.validationTitle {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--crimson);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.validationList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.5rem 0;
+}
+
+.validationList li {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--crimson-dark);
+  padding: 0.2rem 0;
+  line-height: 1.5;
+}
+
+.validationList li::before {
+  content: '· ';
+}
+
+.validationHint {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.contactLink {
+  color: var(--crimson);
+  text-decoration: underline;
+}
+
+/* ADDRESS CORRECTION BOX */
+.correctionBox {
+  background: var(--cream-dark);
+  border: 1px solid var(--gold);
+  border-left: 4px solid var(--gold);
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.correctionTitle {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+
+.correctionSubtitle {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
+.correctionOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.correctionOption {
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.correctionOptionRecommended {
+  border-color: var(--gold);
+  background: var(--cream);
+}
+
+.correctionOptionLabel {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.correctionOptionRecommended .correctionOptionLabel {
+  color: var(--gold-dark);
+}
+
+.correctionAddress {
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  color: var(--ink);
+  line-height: 1.6;
+  flex: 1;
+}
+
+.correctionKeepBtn {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--muted);
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 0.5rem;
+}
+
+.correctionKeepBtn:hover {
+  border-color: var(--navy);
+  color: var(--navy);
+}
+
+.correctionAcceptBtn {
+  background: var(--gold);
+  border: none;
+  color: var(--navy);
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 0.5rem;
+}
+
+.correctionAcceptBtn:hover {
+  background: var(--gold-light);
+}
+
+/* VERIFIED ADDRESS BADGE */
+.addressVerified {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: #16a34a;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+@media (max-width: 600px) {
+  .correctionOptions {
+    grid-template-columns: 1fr;
+  }
+}

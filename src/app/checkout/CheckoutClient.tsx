@@ -31,6 +31,14 @@ interface ShippingRate {
   duration_terms?: string | null;
 }
 
+interface AddressCorrection {
+  street1: string;
+  street2: string;
+  city: string;
+  state: string;
+  zip: string;
+}
+
 const EMPTY_ADDRESS: Address = {
   name: '', email: '', phone: '',
   street1: '', street2: '',
@@ -55,18 +63,25 @@ export default function CheckoutClient() {
   const [selectedRate, setSelectedRate] = useState<ShippingRate | null>(null);
   const [loadingRates, setLoadingRates] = useState(false);
   const [ratesError, setRatesError] = useState('');
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [addressCorrection, setAddressCorrection] = useState<AddressCorrection | null>(null);
+  const [showCorrectionPrompt, setShowCorrectionPrompt] = useState(false);
   const [processing, setProcessing] = useState(false);
 
   const totalWeightOz = cart.reduce((sum, item) => {
     return sum + (PRODUCT_WEIGHTS[item.id] || 8) * item.qty;
   }, 0);
 
-  const allFreeShipping = cart.every(item => item.sale); // simplified — refine per your data
+  const allFreeShipping = cart.every(item => item.sale);
   const orderTotal = cartTotal + (selectedRate?.amount || 0);
 
   function updateAddress(field: keyof Address, value: string) {
     setAddress(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
+    // Clear validation errors when user edits
+    setValidationErrors([]);
+    setAddressCorrection(null);
+    setShowCorrectionPrompt(false);
   }
 
   function validateAddress(): boolean {
@@ -81,10 +96,34 @@ export default function CheckoutClient() {
     return Object.keys(newErrors).length === 0;
   }
 
+  function acceptCorrection() {
+    if (!addressCorrection) return;
+    setAddress(prev => ({
+      ...prev,
+      street1: addressCorrection.street1 || prev.street1,
+      street2: addressCorrection.street2 || prev.street2,
+      city: addressCorrection.city || prev.city,
+      state: addressCorrection.state || prev.state,
+      zip: addressCorrection.zip || prev.zip,
+    }));
+    setShowCorrectionPrompt(false);
+    setAddressCorrection(null);
+  }
+
+  function keepOriginalAddress() {
+    setShowCorrectionPrompt(false);
+    setAddressCorrection(null);
+    // Proceed to shipping step anyway since address was still valid
+    setStep('shipping');
+  }
+
   async function fetchRates() {
     if (!validateAddress()) return;
     setLoadingRates(true);
     setRatesError('');
+    setValidationErrors([]);
+    setAddressCorrection(null);
+    setShowCorrectionPrompt(false);
     setRates([]);
     setSelectedRate(null);
 
@@ -98,15 +137,39 @@ export default function CheckoutClient() {
           hasFreeShipping: allFreeShipping,
         }),
       });
+
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
+
+      // Address validation failed
+      if (res.status === 422 && data.validationFailed) {
+        setValidationErrors(data.messages || ['Could not verify this address.']);
+        setLoadingRates(false);
+        return;
+      }
+
+      if (data.error && !data.rates) {
+        setRatesError(data.error || 'Could not fetch shipping rates. Please try again.');
+        setLoadingRates(false);
+        return;
+      }
+
       setRates(data.rates || []);
       if (data.rates?.length > 0) {
-        setSelectedRate(data.rates[0]); // pre-select cheapest
+        setSelectedRate(data.rates[0]);
       }
+
+      // Address was valid but Shippo suggests a correction
+      if (data.addressCorrected && data.correctedAddress) {
+        setAddressCorrection(data.correctedAddress);
+        setShowCorrectionPrompt(true);
+        setLoadingRates(false);
+        return; // Wait for user to accept/reject correction before proceeding
+      }
+
       setStep('shipping');
+
     } catch (err: any) {
-      setRatesError(err.message || 'Could not fetch shipping rates. Please try again.');
+      setRatesError('Network error. Please try again.');
     } finally {
       setLoadingRates(false);
     }
@@ -151,6 +214,7 @@ export default function CheckoutClient() {
 
   return (
     <div className={styles.page}>
+
       {/* STEP INDICATOR */}
       <div className={styles.steps}>
         <div className={`${styles.stepItem} ${step === 'address' ? styles.stepActive : styles.stepDone}`}>
@@ -170,10 +234,9 @@ export default function CheckoutClient() {
       </div>
 
       <div className={styles.layout}>
-        {/* LEFT COLUMN — FORM */}
         <div className={styles.formCol}>
 
-          {/* STEP 1 — ADDRESS */}
+          {/* ── STEP 1 — ADDRESS ── */}
           {step === 'address' && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>Shipping Address</h2>
@@ -241,15 +304,65 @@ export default function CheckoutClient() {
                 </div>
               </div>
 
+              {/* VALIDATION ERRORS — address not found */}
+              {validationErrors.length > 0 && (
+                <div className={styles.validationError}>
+                  <p className={styles.validationTitle}>⚠ Address could not be verified</p>
+                  <ul className={styles.validationList}>
+                    {validationErrors.map((msg, i) => (
+                      <li key={i}>{msg}</li>
+                    ))}
+                  </ul>
+                  <p className={styles.validationHint}>
+                    Please check your address and try again, or{' '}
+                    <Link href="/contact" className={styles.contactLink}>contact us</Link> for help.
+                  </p>
+                </div>
+              )}
+
+              {/* ADDRESS CORRECTION PROMPT */}
+              {showCorrectionPrompt && addressCorrection && (
+                <div className={styles.correctionBox}>
+                  <p className={styles.correctionTitle}>✦ Address Correction Suggested</p>
+                  <p className={styles.correctionSubtitle}>
+                    We found a slight difference between what you entered and the verified address. Which would you like to use?
+                  </p>
+                  <div className={styles.correctionOptions}>
+                    <div className={styles.correctionOption}>
+                      <p className={styles.correctionOptionLabel}>You entered:</p>
+                      <p className={styles.correctionAddress}>
+                        {address.street1}{address.street2 ? `, ${address.street2}` : ''}<br />
+                        {address.city}, {address.state} {address.zip}
+                      </p>
+                      <button className={styles.correctionKeepBtn} onClick={keepOriginalAddress}>
+                        Use My Address
+                      </button>
+                    </div>
+                    <div className={`${styles.correctionOption} ${styles.correctionOptionRecommended}`}>
+                      <p className={styles.correctionOptionLabel}>✦ Verified address:</p>
+                      <p className={styles.correctionAddress}>
+                        {addressCorrection.street1}{addressCorrection.street2 ? `, ${addressCorrection.street2}` : ''}<br />
+                        {addressCorrection.city}, {addressCorrection.state} {addressCorrection.zip}
+                      </p>
+                      <button className={styles.correctionAcceptBtn} onClick={acceptCorrection}>
+                        Use Verified Address
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {ratesError && <div className={styles.ratesError}>{ratesError}</div>}
 
-              <button className={styles.primaryBtn} onClick={fetchRates} disabled={loadingRates}>
-                {loadingRates ? '✦ Fetching Shipping Rates…' : 'Continue to Shipping →'}
-              </button>
+              {!showCorrectionPrompt && (
+                <button className={styles.primaryBtn} onClick={fetchRates} disabled={loadingRates}>
+                  {loadingRates ? '✦ Verifying Address & Fetching Rates…' : 'Continue to Shipping →'}
+                </button>
+              )}
             </div>
           )}
 
-          {/* STEP 2 — SHIPPING RATES */}
+          {/* ── STEP 2 — SHIPPING RATES ── */}
           {step === 'shipping' && (
             <div className={styles.card}>
               <div className={styles.cardTitleRow}>
@@ -258,6 +371,7 @@ export default function CheckoutClient() {
               </div>
 
               <div className={styles.addressSummary}>
+                <p className={styles.addressVerified}>✦ Address Verified</p>
                 <p>📍 {address.name} · {address.street1}{address.street2 ? `, ${address.street2}` : ''}, {address.city}, {address.state} {address.zip}</p>
               </div>
 
@@ -289,16 +403,14 @@ export default function CheckoutClient() {
                 ))}
               </div>
 
-              <button className={styles.primaryBtn}
-                onClick={() => setStep('review')}
-                disabled={!selectedRate}>
+              <button className={styles.primaryBtn} onClick={() => setStep('review')} disabled={!selectedRate}>
                 Continue to Review →
               </button>
               <button className={styles.backBtn} onClick={() => setStep('address')}>← Back</button>
             </div>
           )}
 
-          {/* STEP 3 — REVIEW & PAY */}
+          {/* ── STEP 3 — REVIEW & PAY ── */}
           {step === 'review' && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>Review Your Order</h2>
@@ -317,7 +429,9 @@ export default function CheckoutClient() {
                   <span className={styles.reviewLabel}>Shipping</span>
                   <span className={styles.reviewValue}>
                     {selectedRate?.carrier} — {selectedRate?.service}
-                    {selectedRate?.estimatedDays && <><br /><span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Est. {selectedRate.estimatedDays} business days</span></>}
+                    {selectedRate?.estimatedDays && (
+                      <><br /><span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Est. {selectedRate.estimatedDays} business days</span></>
+                    )}
                   </span>
                   <button className={styles.editBtn} onClick={() => setStep('shipping')}>Edit</button>
                 </div>
@@ -401,14 +515,13 @@ export default function CheckoutClient() {
                 <span>from ${orderTotal.toFixed(2)}</span>
               </div>
             </div>
-            <p className={styles.summaryTax}>
-              501(c)3 nonprofit · Every purchase is tax-deductible
-            </p>
+            <p className={styles.summaryTax}>501(c)3 nonprofit · Every purchase is tax-deductible</p>
           </div>
 
           <div className={styles.trustBox}>
             <p>🔒 Secure Stripe Checkout</p>
             <p>📦 Ships from Cincinnati, OH</p>
+            <p>✦ Address verified by USPS</p>
             <p>✦ Tax-deductible donation</p>
             <p>☎ Questions? 513.741.3400</p>
           </div>
