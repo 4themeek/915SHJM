@@ -10,9 +10,13 @@
   },
   "dependencies": {
     "@stripe/stripe-js": "^3.4.0",
+    "@vercel/postgres": "^0.10.0",
+    "iron-session": "^8.0.4",
+    "jose": "^6.2.3",
     "next": "15.3.6",
     "react": "^19",
     "react-dom": "^19",
+    "resend": "^6.12.4",
     "shippo": "^2.18.0",
     "stripe": "^15.7.0"
   },
