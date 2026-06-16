@@ -22,21 +22,30 @@ export default function ProductForm({ product, categories }: Props) {
   const router = useRouter();
   const isEdit = !!product;
 
-  const [form, setForm] = useState(product ? {
-    name: product.name,
-    cat: product.cat,
-    price: product.price,
-    start_price: String(product.start_price),
-    img: product.img,
-    desc: product.desc,
-    sale: product.sale,
-    out_of_stock: product.out_of_stock,
-    is_free: product.is_free,
-    weight_oz: String(product.weight_oz),
-    active: product.active,
-    sale_price: product.sale_price != null ? String(product.sale_price) : '',
-    sale_ends_at: product.sale_ends_at ? product.sale_ends_at.substring(0, 10) : '',
-  } : EMPTY_FORM);
+  const [form, setForm] = useState(() => {
+    if (!product) return EMPTY_FORM;
+    try {
+      return {
+        name: product.name || '',
+        cat: product.cat || '',
+        price: product.price || '',
+        start_price: product.start_price != null ? String(product.start_price) : '',
+        img: product.img || '',
+        desc: product.desc || '',
+        sale: Boolean(product.sale),
+        out_of_stock: Boolean(product.out_of_stock),
+        is_free: Boolean(product.is_free),
+        weight_oz: product.weight_oz != null ? String(product.weight_oz) : '8',
+        active: product.active !== false,
+        sale_price: product.sale_price != null ? String(product.sale_price) : '',
+        sale_ends_at: product.sale_ends_at
+          ? String(product.sale_ends_at).substring(0, 10)
+          : '',
+      };
+    } catch {
+      return EMPTY_FORM;
+    }
+  });
 
   const [newCat, setNewCat] = useState('');
   const [globalSaleDate, setGlobalSaleDate] = useState('');
