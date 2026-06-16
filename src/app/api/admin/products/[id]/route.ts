@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/auth';
-import { getProductById, updateProduct, deleteProduct } from '@/lib/db';
+import { getProductById, updateProduct, deleteProduct, runMigrations } from '@/lib/db';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -22,6 +22,7 @@ export async function PUT(req: NextRequest, { params }: Props) {
 
   const { id } = await params;
   try {
+    await runMigrations(); // ensure new columns exist
     const data = await req.json();
 
     // Explicitly sanitize every field — booleans must be Boolean(), numbers must be

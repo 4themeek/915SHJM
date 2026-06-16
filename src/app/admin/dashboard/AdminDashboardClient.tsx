@@ -49,17 +49,24 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
     );
     if (!confirmed) return;
     setClearingSales(true);
+    setSeedMsg('');
     try {
       const res = await fetch('/api/admin/clear-sales', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         setSeedMsg('✦ All sale flags cleared successfully');
-        setProducts(prev => prev.map(p => ({ ...p, sale: false, sale_price: null, sale_ends_at: null })));
+        // Update local state so UI reflects change immediately
+        setProducts(prev => prev.map(p => ({
+          ...p,
+          sale: false,
+          sale_price: null,
+          sale_ends_at: null,
+        })));
       } else {
-        setSeedMsg('Error: ' + data.error);
+        setSeedMsg('❌ Error: ' + (data.error || 'Unknown error'));
       }
-    } catch {
-      setSeedMsg('Failed to clear sales.');
+    } catch (err: any) {
+      setSeedMsg('❌ Network error: ' + err.message);
     } finally {
       setClearingSales(false);
     }
