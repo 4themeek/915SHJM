@@ -96,7 +96,6 @@ export default function ProductForm({ product, categories }: Props) {
       if (data.error) throw new Error(data.error);
 
       router.push('/admin/dashboard');
-      router.refresh();
     } catch (err: any) {
       setError(err.message || 'Save failed');
     } finally {

@@ -84,8 +84,8 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
       const res = await fetch('/api/admin/seed', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        setSeedMsg(`✦ ${data.message}`);
-        router.refresh();
+        setSeedMsg(`✦ ${data.message} — reloading...`);
+        setTimeout(() => window.location.reload(), 1500);
       } else {
         setSeedMsg('Error: ' + data.error);
       }
