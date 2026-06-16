@@ -244,7 +244,9 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
                             : <span className={styles.badgeHidden}>Hidden</span>}
                           {product.sale && (
                             <span className={styles.badgeSale}>
-                              Sale{product.sale_price ? ` · $${Number(product.sale_price).toFixed(2)}` : ''}
+                              Sale{product.sale_price != null && Number(product.sale_price) > 0
+                                ? ` · $${Number(product.sale_price).toFixed(2)}`
+                                : ''}
                             </span>
                           )}
                           {product.out_of_stock && <span className={styles.badgeOos}>Out of Stock</span>}
