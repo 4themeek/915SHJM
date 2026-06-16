@@ -12,6 +12,8 @@ export interface DbProduct {
   out_of_stock: boolean;
   is_free: boolean;
   weight_oz: number;
+  sale_price: number | null;
+  sale_ends_at: string | null;
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -31,6 +33,8 @@ export async function createProductsTable() {
       out_of_stock BOOLEAN NOT NULL DEFAULT false,
       is_free BOOLEAN NOT NULL DEFAULT false,
       weight_oz INTEGER NOT NULL DEFAULT 8,
+      sale_price NUMERIC(10,2) DEFAULT NULL,
+      sale_ends_at TIMESTAMPTZ DEFAULT NULL,
       active BOOLEAN NOT NULL DEFAULT true,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -61,9 +65,9 @@ export async function getProductById(id: number): Promise<DbProduct | null> {
 
 export async function createProduct(data: Omit<DbProduct, 'id' | 'created_at' | 'updated_at'>): Promise<DbProduct> {
   const { rows } = await sql<DbProduct>`
-    INSERT INTO products (name, cat, price, start_price, img, "desc", sale, out_of_stock, is_free, weight_oz, active)
+    INSERT INTO products (name, cat, price, start_price, img, "desc", sale, sale_price, sale_ends_at, out_of_stock, is_free, weight_oz, active)
     VALUES (${data.name}, ${data.cat}, ${data.price}, ${data.start_price}, ${data.img}, ${data.desc},
-            ${data.sale}, ${data.out_of_stock}, ${data.is_free}, ${data.weight_oz}, ${data.active})
+            ${data.sale}, ${data.sale_price ?? null}, ${data.sale_ends_at ?? null}, ${data.out_of_stock}, ${data.is_free}, ${data.weight_oz}, ${data.active})
     RETURNING *
   `;
   return rows[0];
@@ -79,6 +83,8 @@ export async function updateProduct(id: number, data: Partial<Omit<DbProduct, 'i
       img = COALESCE(${data.img ?? null}, img),
       "desc" = COALESCE(${data.desc ?? null}, "desc"),
       sale = COALESCE(${data.sale ?? null}, sale),
+      sale_price = ${data.sale_price !== undefined ? data.sale_price : null},
+      sale_ends_at = ${data.sale_ends_at !== undefined ? data.sale_ends_at : null},
       out_of_stock = COALESCE(${data.out_of_stock ?? null}, out_of_stock),
       is_free = COALESCE(${data.is_free ?? null}, is_free),
       weight_oz = COALESCE(${data.weight_oz ?? null}, weight_oz),
@@ -103,4 +109,49 @@ export async function seedProducts(products: any[]): Promise<void> {
       ON CONFLICT DO NOTHING
     `;
   }
+}
+
+// ── GLOBAL SALE SETTINGS ──────────────────────────────────────
+export async function createSaleSettingsTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS sale_settings (
+      id SERIAL PRIMARY KEY,
+      sale_ends_at TIMESTAMPTZ DEFAULT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
+    INSERT INTO sale_settings (id) VALUES (1) ON CONFLICT DO NOTHING
+  `;
+}
+
+export async function getGlobalSaleEndDate(): Promise<string | null> {
+  try {
+    const { rows } = await sql`SELECT sale_ends_at FROM sale_settings WHERE id = 1`;
+    return rows[0]?.sale_ends_at || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function setGlobalSaleEndDate(date: string | null): Promise<void> {
+  await sql`
+    UPDATE sale_settings SET sale_ends_at = ${date}, updated_at = NOW() WHERE id = 1
+  `;
+}
+
+export async function applyGlobalSaleDateToAllSaleItems(date: string | null): Promise<void> {
+  await sql`
+    UPDATE products SET sale_ends_at = ${date}, updated_at = NOW() WHERE sale = true
+  `;
+}
+
+// ── MIGRATIONS ────────────────────────────────────────────────
+export async function runMigrations() {
+  await sql`
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_price NUMERIC(10,2) DEFAULT NULL
+  `;
+  await sql`
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_ends_at TIMESTAMPTZ DEFAULT NULL
+  `;
 }

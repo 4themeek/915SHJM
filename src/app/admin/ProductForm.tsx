@@ -15,6 +15,7 @@ const EMPTY_FORM = {
   name: '', cat: '', price: '', start_price: '',
   img: '', desc: '', sale: false, out_of_stock: false,
   is_free: false, weight_oz: '8', active: true,
+  sale_price: '', sale_ends_at: '',
 };
 
 export default function ProductForm({ product, categories }: Props) {
@@ -33,14 +34,38 @@ export default function ProductForm({ product, categories }: Props) {
     is_free: product.is_free,
     weight_oz: String(product.weight_oz),
     active: product.active,
+    sale_price: product.sale_price != null ? String(product.sale_price) : '',
+    sale_ends_at: product.sale_ends_at ? product.sale_ends_at.substring(0, 10) : '',
   } : EMPTY_FORM);
 
   const [newCat, setNewCat] = useState('');
+  const [globalSaleDate, setGlobalSaleDate] = useState('');
+  const [applyToAll, setApplyToAll] = useState(false);
+  const [saleMsg, setSaleMsg] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   function update(field: string, value: any) {
     setForm(prev => ({ ...prev, [field]: value }));
+  }
+
+  async function applyGlobalSaleDate() {
+    if (!globalSaleDate) return;
+    setSaleMsg('Applying...');
+    try {
+      const res = await fetch('/api/admin/sale-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sale_ends_at: globalSaleDate, apply_to_all: applyToAll }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSaleMsg('✦ Sale date saved' + (applyToAll ? ' and applied to all sale items' : ''));
+        if (!form.sale_ends_at) update('sale_ends_at', globalSaleDate);
+      }
+    } catch {
+      setSaleMsg('Error saving sale date');
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -53,6 +78,8 @@ export default function ProductForm({ product, categories }: Props) {
       cat: newCat.trim() || form.cat,
       start_price: parseFloat(form.start_price) || 0,
       weight_oz: parseInt(form.weight_oz) || 8,
+      sale_price: form.sale_price ? parseFloat(form.sale_price) : null,
+      sale_ends_at: form.sale_ends_at || null,
     };
 
     try {
@@ -192,6 +219,56 @@ export default function ProductForm({ product, categories }: Props) {
                   ))}
                 </div>
               </div>
+
+              {/* SALE PRICING */}
+              {form.sale && (
+                <>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Sale Price (USD)</label>
+                    <input className={styles.input} type="number" min="0" step="0.01"
+                      placeholder="19.99"
+                      value={form.sale_price}
+                      onChange={e => update('sale_price', e.target.value)} />
+                    <p className={styles.fieldHint}>Discounted price shown during sale</p>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Sale End Date</label>
+                    <input className={styles.input} type="date"
+                      value={form.sale_ends_at}
+                      onChange={e => update('sale_ends_at', e.target.value)} />
+                    <p className={styles.fieldHint}>Sale badge auto-hides after this date</p>
+                  </div>
+
+                  {/* GLOBAL SALE DATE PANEL */}
+                  <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                    <div className={styles.globalSaleBox}>
+                      <p className={styles.globalSaleTitle}>✦ Global Sale End Date</p>
+                      <p className={styles.globalSaleHint}>
+                        Set one end date and optionally apply it to ALL products currently on sale at once.
+                      </p>
+                      <div className={styles.globalSaleRow}>
+                        <input className={styles.input} type="date"
+                          value={globalSaleDate}
+                          onChange={e => setGlobalSaleDate(e.target.value)}
+                          style={{ maxWidth: '200px' }} />
+                        <label className={styles.toggle}>
+                          <input type="checkbox"
+                            checked={applyToAll}
+                            onChange={e => setApplyToAll(e.target.checked)} />
+                          <span className={styles.toggleLabel}>Apply to all sale items</span>
+                        </label>
+                        <button type="button" className={styles.globalSaleBtn}
+                          onClick={applyGlobalSaleDate}
+                          disabled={!globalSaleDate}>
+                          Apply Date
+                        </button>
+                      </div>
+                      {saleMsg && <p className={styles.saleMsg}>{saleMsg}</p>}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className={styles.formActions}>

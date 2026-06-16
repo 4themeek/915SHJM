@@ -132,3 +132,24 @@
 .btnNav:hover {
   background: var(--navy-dark);
 }
+
+.priceWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.salePrice {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--crimson);
+  font-weight: 600;
+}
+
+.originalPrice {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-decoration: line-through;
+}

@@ -19,9 +19,16 @@ export default function ProductCard({ product }: Props) {
     openCart();
   }
 
+  // Check if sale has expired
+  const saleActive = product.sale && (
+    !('sale_ends_at' in product) ||
+    !(product as any).sale_ends_at ||
+    new Date((product as any).sale_ends_at) > new Date()
+  );
+
   return (
     <Link href={`/shop/${product.id}`} className={styles.card}>
-      {product.sale && <span className={styles.saleBadge}>Sale</span>}
+      {saleActive && <span className={styles.saleBadge}>Sale</span>}
       {product.outOfStock && <span className={styles.outBadge}>Out of Stock</span>}
       <div className={styles.imgWrap}>
         <Image
@@ -39,7 +46,14 @@ export default function ProductCard({ product }: Props) {
       <div className={styles.body}>
         <p className={styles.cat}>{product.cat}</p>
         <p className={styles.name}>{product.name}</p>
-        <p className={styles.price}>{product.price}</p>
+        {(product as any).sale_price && saleActive ? (
+          <div className={styles.priceWrap}>
+            <p className={styles.salePrice}>${(product as any).sale_price.toFixed(2)}</p>
+            <p className={styles.originalPrice}>{product.price}</p>
+          </div>
+        ) : (
+          <p className={styles.price}>{product.price}</p>
+        )}
         {product.outOfStock ? (
           <button className={styles.btnDisabled} disabled>Out of Stock</button>
         ) : product.isFree ? (

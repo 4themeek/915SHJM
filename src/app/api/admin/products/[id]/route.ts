@@ -34,6 +34,8 @@ export async function PUT(req: NextRequest, { params }: Props) {
       out_of_stock: data.out_of_stock,
       is_free: data.is_free,
       weight_oz: data.weight_oz !== undefined ? parseInt(data.weight_oz) : undefined,
+      sale_price: data.sale_price !== undefined ? (data.sale_price ? parseFloat(data.sale_price) : null) : undefined,
+      sale_ends_at: data.sale_ends_at !== undefined ? (data.sale_ends_at || null) : undefined,
       active: data.active,
     });
     return NextResponse.json({ product });

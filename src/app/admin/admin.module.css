@@ -808,3 +808,60 @@
   .statsBar { flex-direction: column; align-items: flex-start; }
   .statCard { border-right: none; border-bottom: 1px solid var(--border); padding: 0.5rem 0; width: 100%; }
 }
+
+/* GLOBAL SALE BOX */
+.globalSaleBox {
+  background: var(--cream-dark);
+  border: 1px solid var(--gold);
+  border-left: 4px solid var(--gold);
+  padding: 1.25rem 1.5rem;
+}
+
+.globalSaleTitle {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.globalSaleHint {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.globalSaleRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.globalSaleBtn {
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  padding: 0.6rem 1.25rem;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.globalSaleBtn:hover:not(:disabled) { background: var(--gold-light); }
+.globalSaleBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.saleMsg {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: #16a34a;
+  font-style: italic;
+  margin-top: 0.75rem;
+}

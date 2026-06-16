@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/auth';
-import { getAllProductsAdmin, createProduct, createProductsTable } from '@/lib/db';
+import { getAllProductsAdmin, createProduct, createProductsTable, runMigrations } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   const session = await getAdminSession();
@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
 
   try {
     await createProductsTable();
+    await runMigrations();
     const products = await getAllProductsAdmin();
     return NextResponse.json({ products });
   } catch (error) {
@@ -33,6 +34,8 @@ export async function POST(req: NextRequest) {
       out_of_stock: data.out_of_stock || false,
       is_free: data.is_free || false,
       weight_oz: parseInt(data.weight_oz) || 8,
+      sale_price: data.sale_price ? parseFloat(data.sale_price) : null,
+      sale_ends_at: data.sale_ends_at || null,
       active: data.active !== false,
     });
     return NextResponse.json({ product });
