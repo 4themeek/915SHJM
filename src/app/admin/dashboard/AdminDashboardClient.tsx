@@ -244,9 +244,15 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
                             : <span className={styles.badgeHidden}>Hidden</span>}
                           {product.sale && (
                             <span className={styles.badgeSale}>
-                              Sale{product.sale_price != null && Number(product.sale_price) > 0
-                                ? ` · $${Number(product.sale_price).toFixed(2)}`
-                                : ''}
+                              {(() => {
+                                const sp = product.sale_price;
+                                const spNum = sp != null ? parseFloat(String(sp)) : NaN;
+                                if (!isNaN(spNum) && spNum > 0) {
+                                  return `Sale · $${spNum.toFixed(2)}`;
+                                }
+                                // Debug: show raw value so we can see what DB returns
+                                return `Sale [raw:${JSON.stringify(sp)}]`;
+                              })()}
                             </span>
                           )}
                           {product.out_of_stock && <span className={styles.badgeOos}>Out of Stock</span>}

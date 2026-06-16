@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+export const dynamic = 'force-dynamic';
 import { getAdminSession } from '@/lib/auth';
 import { getAllProductsAdmin, createProductsTable, runMigrations } from '@/lib/db';
 import AdminDashboardClient from './AdminDashboardClient';
