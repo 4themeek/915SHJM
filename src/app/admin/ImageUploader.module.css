@@ -192,3 +192,29 @@
 .hiddenInput {
   display: none;
 }
+
+/* IMAGE SPECS BOX */
+.specsBox {
+  background: #f8f8f8;
+  border: 1px dashed #d0d0d0;
+  padding: 0.6rem 0.85rem;
+  margin-top: 0.6rem;
+  text-align: left;
+  display: inline-block;
+}
+
+.specsTitle {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 0.35rem;
+}
+
+.specsLine {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: #bbb;
+  line-height: 1.7;
+}

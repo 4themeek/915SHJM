@@ -137,7 +137,13 @@ export default function ImageUploader({ currentUrl, onUpload }: Props) {
             <>
               <div className={styles.uploadIcon}>📷</div>
               <p className={styles.uploadTitle}>Click to upload or drag & drop</p>
-              <p className={styles.uploadHint}>JPG, PNG, WebP or GIF · Max 5MB</p>
+              <div className={styles.specsBox}>
+                <p className={styles.specsTitle}>Recommended specs</p>
+                <p className={styles.specsLine}>800 × 800 px · Square (1:1)</p>
+                <p className={styles.specsLine}>JPG format · 72 dpi</p>
+                <p className={styles.specsLine}>80–85% quality · under 300KB</p>
+                <p className={styles.specsLine}>RGB color mode</p>
+              </div>
             </>
           )}
         </div>
