@@ -88,7 +88,7 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
       body: JSON.stringify({
         sender: {
           name: 'The Sacred Hearts Admin',
-          email: 'info@thesacredhearts.org',
+          email: 'themeek@hush.com',
         },
         to: [{ email }],
         subject: '✦ Your Sacred Hearts Admin Login Link',
