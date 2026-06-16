@@ -200,7 +200,7 @@ export default function ProductForm({ product, categories }: Props) {
 
               {/* TOGGLES */}
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label className={styles.label}>Product Flags</label>
+                <label className={styles.label}>Product Status</label>
                 <div className={styles.toggleRow}>
                   {[
                     { key: 'active', label: 'Active (visible in shop)' },

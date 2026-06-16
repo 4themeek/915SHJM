@@ -865,3 +865,20 @@
   font-style: italic;
   margin-top: 0.75rem;
 }
+
+.clearSaleBtn {
+  background: transparent;
+  color: var(--crimson);
+  border: 1px solid #fca5a5;
+  padding: 0.5rem 1rem;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.clearSaleBtn:hover:not(:disabled) { background: #fee2e2; border-color: var(--crimson); }
+.clearSaleBtn:disabled { opacity: 0.5; cursor: not-allowed; }

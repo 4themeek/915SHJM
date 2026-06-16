@@ -19,6 +19,7 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [seedMsg, setSeedMsg] = useState('');
+  const [clearingSales, setClearingSales] = useState(false);
   const router = useRouter();
 
   const categories = ['All', ...Array.from(new Set(products.map(p => p.cat)))];
@@ -42,7 +43,34 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
     setDeleteId(null);
   }
 
+  async function clearAllSales() {
+    const confirmed = window.confirm(
+      'This will remove the Sale badge, sale price, and sale end date from ALL products.\n\nContinue?'
+    );
+    if (!confirmed) return;
+    setClearingSales(true);
+    try {
+      const res = await fetch('/api/admin/clear-sales', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setSeedMsg('✦ All sale flags cleared successfully');
+        setProducts(prev => prev.map(p => ({ ...p, sale: false, sale_price: null, sale_ends_at: null })));
+      } else {
+        setSeedMsg('Error: ' + data.error);
+      }
+    } catch {
+      setSeedMsg('Failed to clear sales.');
+    } finally {
+      setClearingSales(false);
+    }
+  }
+
   async function handleSeed() {
+    const confirmed = window.confirm(
+      'This will UPDATE existing products with original data but will NOT create duplicates.\n\nSafe to run at any time. Continue?'
+    );
+    if (!confirmed) return;
+
     setSeeding(true);
     setSeedMsg('');
     try {
@@ -62,14 +90,18 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
   }
 
   async function toggleActive(product: DbProduct) {
+    const newActive = !product.active;
     const res = await fetch(`/api/admin/products/${product.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ active: !product.active }),
+      body: JSON.stringify({ active: Boolean(newActive) }),
     });
     if (res.ok) {
       const { product: updated } = await res.json();
       setProducts(prev => prev.map(p => p.id === product.id ? updated : p));
+    } else {
+      const data = await res.json();
+      alert('Error: ' + data.error);
     }
   }
 
@@ -131,7 +163,10 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
               <div className={styles.statActions}>
                 <Link href="/admin/products/new" className={styles.addBtn}>+ Add New Product</Link>
                 <button className={styles.seedBtnSmall} onClick={handleSeed} disabled={seeding}>
-                  {seeding ? 'Seeding…' : '↺ Re-seed Products'}
+                  {seeding ? 'Updating…' : '↺ Restore Original Products'}
+                </button>
+                <button className={styles.clearSaleBtn} onClick={clearAllSales} disabled={clearingSales}>
+                  {clearingSales ? 'Clearing…' : '✕ Clear All Sales'}
                 </button>
               </div>
             </div>
