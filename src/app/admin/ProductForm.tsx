@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DbProduct } from '@/lib/db';
 import styles from './admin.module.css';
+import ImageUploader from './ImageUploader';
 
 interface Props {
   product?: DbProduct;
@@ -153,18 +154,13 @@ export default function ProductForm({ product, categories }: Props) {
                 <p className={styles.fieldHint}>Used for Shippo shipping rate calculation</p>
               </div>
 
-              {/* IMAGE URL */}
+              {/* IMAGE UPLOAD */}
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label className={styles.label}>Image URL</label>
-                <input className={styles.input} type="url"
-                  placeholder="https://thesacredhearts.org/wp-content/uploads/…"
-                  value={form.img} onChange={e => update('img', e.target.value)} />
-                {form.img && (
-                  <div className={styles.imgPreview}>
-                    <img src={form.img} alt="Preview"
-                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  </div>
-                )}
+                <label className={styles.label}>Product Image</label>
+                <ImageUploader
+                  currentUrl={form.img}
+                  onUpload={(url) => update('img', url)}
+                />
               </div>
 
               {/* DESCRIPTION */}
