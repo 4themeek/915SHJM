@@ -87,9 +87,13 @@ export default function ProductForm({ product, categories }: Props) {
       cat: newCat.trim() || form.cat,
       start_price: parseFloat(form.start_price) || 0,
       weight_oz: parseInt(form.weight_oz) || 8,
-      sale_price: form.sale && form.sale_price ? parseFloat(form.sale_price) : null,
+      sale_price: (() => {
+        if (!form.sale || !form.sale_price || form.sale_price === '') return null;
+        const p = parseFloat(form.sale_price);
+        return isNaN(p) || p <= 0 ? null : p;
+      })(),
       sale_ends_at: (() => {
-        if (!form.sale || !form.sale_ends_at) return null;
+        if (!form.sale || !form.sale_ends_at || form.sale_ends_at === '') return null;
         try {
           const d = new Date(form.sale_ends_at);
           return isNaN(d.getTime()) ? null : d.toISOString().substring(0, 10);
@@ -110,7 +114,8 @@ export default function ProductForm({ product, categories }: Props) {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
-      router.push('/admin/dashboard');
+      // Use hard redirect so dashboard always gets fresh server data
+      window.location.href = '/admin/dashboard';
     } catch (err: any) {
       setError(err.message || 'Save failed');
     } finally {
