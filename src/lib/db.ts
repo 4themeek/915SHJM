@@ -26,7 +26,7 @@ export async function createProductsTable() {
       price TEXT NOT NULL,
       start_price NUMERIC(10,2) NOT NULL DEFAULT 0,
       img TEXT NOT NULL DEFAULT '',
-      desc TEXT NOT NULL DEFAULT '',
+      "desc" TEXT NOT NULL DEFAULT '',
       sale BOOLEAN NOT NULL DEFAULT false,
       out_of_stock BOOLEAN NOT NULL DEFAULT false,
       is_free BOOLEAN NOT NULL DEFAULT false,
@@ -61,7 +61,7 @@ export async function getProductById(id: number): Promise<DbProduct | null> {
 
 export async function createProduct(data: Omit<DbProduct, 'id' | 'created_at' | 'updated_at'>): Promise<DbProduct> {
   const { rows } = await sql<DbProduct>`
-    INSERT INTO products (name, cat, price, start_price, img, desc, sale, out_of_stock, is_free, weight_oz, active)
+    INSERT INTO products (name, cat, price, start_price, img, "desc", sale, out_of_stock, is_free, weight_oz, active)
     VALUES (${data.name}, ${data.cat}, ${data.price}, ${data.start_price}, ${data.img}, ${data.desc},
             ${data.sale}, ${data.out_of_stock}, ${data.is_free}, ${data.weight_oz}, ${data.active})
     RETURNING *
@@ -77,7 +77,7 @@ export async function updateProduct(id: number, data: Partial<Omit<DbProduct, 'i
       price = COALESCE(${data.price ?? null}, price),
       start_price = COALESCE(${data.start_price ?? null}, start_price),
       img = COALESCE(${data.img ?? null}, img),
-      desc = COALESCE(${data.desc ?? null}, desc),
+      "desc" = COALESCE(${data.desc ?? null}, "desc"),
       sale = COALESCE(${data.sale ?? null}, sale),
       out_of_stock = COALESCE(${data.out_of_stock ?? null}, out_of_stock),
       is_free = COALESCE(${data.is_free ?? null}, is_free),
@@ -97,7 +97,7 @@ export async function deleteProduct(id: number): Promise<void> {
 export async function seedProducts(products: any[]): Promise<void> {
   for (const p of products) {
     await sql`
-      INSERT INTO products (name, cat, price, start_price, img, desc, sale, out_of_stock, is_free, weight_oz, active)
+      INSERT INTO products (name, cat, price, start_price, img, "desc", sale, out_of_stock, is_free, weight_oz, active)
       VALUES (${p.name}, ${p.cat}, ${p.price}, ${p.startPrice}, ${p.img}, ${p.desc},
               ${p.sale ?? false}, ${p.outOfStock ?? false}, ${p.isFree ?? false}, ${p.weightOz ?? 8}, true)
       ON CONFLICT DO NOTHING
