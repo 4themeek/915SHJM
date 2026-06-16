@@ -2,16 +2,17 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PRODUCTS, FEATURED_IDS } from '@/lib/products';
+import { getAllProducts, createProductsTable, runMigrations } from '@/lib/db';
 import ProductCard from '@/components/ProductCard';
 import styles from './page.module.css';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'The Sacred Hearts | Sacred Art Prints & Plaques',
   description:
     'Spread God\'s love with images of the Sacred Heart of Jesus and Immaculate Heart of Mary. High-quality prints and plaques from our 501(c)3 ministry in Cincinnati, Ohio.',
 };
-
-const featured = PRODUCTS.filter((p) => FEATURED_IDS.includes(p.id));
 
 const INFO_CARDS = [
   { icon: '✦', title: 'Free Shipping', desc: 'Most orders ship free within the United States' },
@@ -20,7 +21,28 @@ const INFO_CARDS = [
   { icon: '☎', title: 'Personal Service', desc: 'Mon–Fri 10–5 EST · 513.741.3400' },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  let featured: any[] = [];
+  try {
+    await createProductsTable();
+    await runMigrations();
+    const dbProducts = await getAllProducts();
+    if (dbProducts.length > 0) {
+      const mapped = dbProducts.filter(p => p.active).map(p => ({
+        id: p.id, name: p.name, cat: p.cat, price: p.price,
+        startPrice: Number(p.start_price), img: p.img, desc: p.desc,
+        sale: p.sale && (!p.sale_ends_at || new Date(p.sale_ends_at) > new Date()),
+        sale_price: p.sale_price ? Number(p.sale_price) : null,
+        outOfStock: p.out_of_stock, isFree: p.is_free, weight_oz: p.weight_oz,
+      }));
+      featured = mapped.filter(p => FEATURED_IDS.includes(p.id));
+      if (featured.length === 0) featured = mapped.slice(0, 4);
+    } else {
+      featured = PRODUCTS.filter(p => FEATURED_IDS.includes(p.id));
+    }
+  } catch {
+    featured = PRODUCTS.filter(p => FEATURED_IDS.includes(p.id));
+  }
   return (
     <>
       {/* HERO */}

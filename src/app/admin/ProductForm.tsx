@@ -105,6 +105,7 @@ export default function ProductForm({ product, categories }: Props) {
       const url = isEdit ? `/api/admin/products/${product!.id}` : '/api/admin/products';
       const method = isEdit ? 'PUT' : 'POST';
 
+      console.log('Saving product payload:', JSON.stringify(payload));
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
