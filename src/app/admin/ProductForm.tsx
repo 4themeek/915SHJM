@@ -87,8 +87,14 @@ export default function ProductForm({ product, categories }: Props) {
       cat: newCat.trim() || form.cat,
       start_price: parseFloat(form.start_price) || 0,
       weight_oz: parseInt(form.weight_oz) || 8,
-      sale_price: form.sale_price ? parseFloat(form.sale_price) : null,
-      sale_ends_at: form.sale_ends_at || null,
+      sale_price: form.sale && form.sale_price ? parseFloat(form.sale_price) : null,
+      sale_ends_at: (() => {
+        if (!form.sale || !form.sale_ends_at) return null;
+        try {
+          const d = new Date(form.sale_ends_at);
+          return isNaN(d.getTime()) ? null : d.toISOString().substring(0, 10);
+        } catch { return null; }
+      })(),
     };
 
     try {

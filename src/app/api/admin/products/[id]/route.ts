@@ -45,7 +45,14 @@ export async function PUT(req: NextRequest, { params }: Props) {
 
     // Booleans — explicitly convert so false is never lost
     if (data.active !== undefined)      sanitized.active      = Boolean(data.active);
-    if (data.sale !== undefined)        sanitized.sale        = Boolean(data.sale);
+    if (data.sale !== undefined) {
+      sanitized.sale = Boolean(data.sale);
+      // If sale is being turned off, clear sale price and date too
+      if (!Boolean(data.sale)) {
+        sanitized.sale_price = null;
+        sanitized.sale_ends_at = null;
+      }
+    }
     if (data.out_of_stock !== undefined) sanitized.out_of_stock = Boolean(data.out_of_stock);
     if (data.is_free !== undefined)     sanitized.is_free     = Boolean(data.is_free);
 
@@ -54,9 +61,19 @@ export async function PUT(req: NextRequest, { params }: Props) {
       sanitized.sale_price = data.sale_price && Number(data.sale_price) > 0
         ? parseFloat(String(data.sale_price)) : null;
 
-    if (data.sale_ends_at !== undefined)
-      sanitized.sale_ends_at = data.sale_ends_at && data.sale_ends_at !== ''
-        ? String(data.sale_ends_at) : null;
+    if (data.sale_ends_at !== undefined) {
+      if (!data.sale_ends_at || data.sale_ends_at === '') {
+        sanitized.sale_ends_at = null;
+      } else {
+        // Convert any date format to ISO string Postgres can accept (YYYY-MM-DD)
+        try {
+          const d = new Date(data.sale_ends_at);
+          sanitized.sale_ends_at = isNaN(d.getTime()) ? null : d.toISOString().substring(0, 10);
+        } catch {
+          sanitized.sale_ends_at = null;
+        }
+      }
+    }
 
     const product = await updateProduct(Number(id), sanitized);
     return NextResponse.json({ product });
