@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { verifyToken, setSessionCookie } from '@/lib/auth';
+import { verifyToken } from '@/lib/auth';
 
 export default async function AdminVerifyPage({
   searchParams,
@@ -18,6 +18,6 @@ export default async function AdminVerifyPage({
     redirect('/admin?error=invalid_token');
   }
 
-  await setSessionCookie(payload.email);
-  redirect('/admin/dashboard');
+  // Don't set cookie here — redirect to API route which handles it
+  redirect(`/api/admin/verify?token=${token}`);
 }

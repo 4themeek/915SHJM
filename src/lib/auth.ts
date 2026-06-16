@@ -1,5 +1,4 @@
 import { SignJWT, jwtVerify } from 'jose';
-import { cookies } from 'next/headers';
 
 const SECRET = new TextEncoder().encode(
   process.env.ADMIN_JWT_SECRET || 'sacred-hearts-admin-secret-change-in-production'
@@ -36,33 +35,40 @@ export async function verifyToken(token: string): Promise<{ email: string; type:
   }
 }
 
-// Check if the request is authenticated
+// Check if the request is authenticated (reads from next/headers cookies)
 export async function getAdminSession(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get(SESSION_COOKIE);
-  if (!sessionCookie?.value) return null;
+  try {
+    const { cookies } = await import('next/headers');
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get(SESSION_COOKIE);
+    if (!sessionCookie?.value) return null;
 
-  const payload = await verifyToken(sessionCookie.value);
-  if (!payload || payload.type !== 'session') return null;
+    const payload = await verifyToken(sessionCookie.value);
+    if (!payload || payload.type !== 'session') return null;
 
-  return payload.email;
+    return payload.email;
+  } catch {
+    return null;
+  }
 }
 
-// Set session cookie
+// Set session cookie (only call from Server Actions or Route Handlers)
 export async function setSessionCookie(email: string): Promise<void> {
   const token = await generateSessionToken(email);
+  const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 7,
     path: '/',
   });
 }
 
 // Clear session cookie
 export async function clearSessionCookie(): Promise<void> {
+  const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE);
 }

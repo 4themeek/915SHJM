@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { clearSessionCookie } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
-  await clearSessionCookie();
-  return NextResponse.json({ success: true });
+  const response = NextResponse.json({ success: true });
+  response.cookies.delete('sh_admin_session');
+  return response;
 }
