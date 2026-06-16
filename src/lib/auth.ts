@@ -67,29 +67,32 @@ export async function clearSessionCookie(): Promise<void> {
   cookieStore.delete(SESSION_COOKIE);
 }
 
-// Send magic link email via Resend
+// Send magic link email via Brevo (formerly Sendinblue)
 export async function sendMagicLinkEmail(email: string, token: string): Promise<boolean> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const magicLink = `${siteUrl}/admin/verify?token=${token}`;
 
-  const RESEND_API_KEY = process.env.RESEND_API_KEY;
-  if (!RESEND_API_KEY) {
-    console.error('RESEND_API_KEY not set');
+  const BREVO_API_KEY = process.env.BREVO_API_KEY;
+  if (!BREVO_API_KEY) {
+    console.error('BREVO_API_KEY not set');
     return false;
   }
 
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'api-key': BREVO_API_KEY,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'The Sacred Hearts Admin <noreply@thesacredhearts.org>',
-        to: email,
+        sender: {
+          name: 'The Sacred Hearts Admin',
+          email: 'info@thesacredhearts.org',
+        },
+        to: [{ email }],
         subject: '✦ Your Sacred Hearts Admin Login Link',
-        html: `
+        htmlContent: `
           <div style="font-family: Georgia, serif; max-width: 500px; margin: 0 auto; padding: 2rem; background: #FAF6EF; border: 1px solid #C9A84C;">
             <h2 style="font-family: Georgia, serif; color: #8B1A1A; text-align: center; letter-spacing: 0.05em;">
               ✦ The Sacred Hearts
@@ -113,8 +116,15 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
         `,
       }),
     });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error('Brevo error:', err);
+    }
+
     return res.ok;
-  } catch {
+  } catch (err) {
+    console.error('Brevo send error:', err);
     return false;
   }
 }
