@@ -30,13 +30,14 @@ export default function ProductCard({ product }: Props) {
     <Link href={`/shop/${product.id}`} className={styles.card}>
       {saleActive && <span className={styles.saleBadge}>Sale</span>}
       {product.outOfStock && <span className={styles.outBadge}>Out of Stock</span>}
-      <div className={styles.imgWrap}>
+      <div className={styles.imgWrap} onClick={(e) => e.preventDefault()}>
         <Image
           src={product.img}
           alt={product.name}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className={styles.img}
+          draggable={false}
           onError={(e) => {
             (e.target as HTMLImageElement).src =
               'https://thesacredhearts.org/wp-content/uploads/woocommerce-placeholder.png';
