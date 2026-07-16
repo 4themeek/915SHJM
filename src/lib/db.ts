@@ -184,3 +184,114 @@ export async function runMigrations() {
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_price NUMERIC(10,2) DEFAULT NULL`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_ends_at TIMESTAMPTZ DEFAULT NULL`;
 }
+
+// ── SETTINGS TABLE ────────────────────────────────────────────
+export async function createSettingsTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  // Insert defaults if not present
+  await sql`
+    INSERT INTO settings (key, value) VALUES ('free_shipping_threshold', '50')
+    ON CONFLICT (key) DO NOTHING
+  `;
+}
+
+export async function getSetting(key: string): Promise<string | null> {
+  try {
+    const { rows } = await sql`SELECT value FROM settings WHERE key = ${key}`;
+    return rows[0]?.value || null;
+  } catch { return null; }
+}
+
+export async function setSetting(key: string, value: string): Promise<void> {
+  await sql`
+    INSERT INTO settings (key, value) VALUES (${key}, ${value})
+    ON CONFLICT (key) DO UPDATE SET value = ${value}, updated_at = NOW()
+  `;
+}
+
+// ── PROMO CODES TABLE ─────────────────────────────────────────
+export async function createPromoCodesTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS promo_codes (
+      id SERIAL PRIMARY KEY,
+      code TEXT NOT NULL UNIQUE,
+      type TEXT NOT NULL DEFAULT 'percent',
+      value NUMERIC(10,2) NOT NULL,
+      min_order NUMERIC(10,2) DEFAULT NULL,
+      expires_at TIMESTAMPTZ DEFAULT NULL,
+      active BOOLEAN NOT NULL DEFAULT true,
+      uses INTEGER NOT NULL DEFAULT 0,
+      max_uses INTEGER DEFAULT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+}
+
+export interface PromoCode {
+  id: number;
+  code: string;
+  type: 'percent' | 'fixed';
+  value: number;
+  min_order: number | null;
+  expires_at: string | null;
+  active: boolean;
+  uses: number;
+  max_uses: number | null;
+  created_at: string;
+}
+
+export async function getAllPromoCodes(): Promise<PromoCode[]> {
+  const { rows } = await sql<PromoCode>`
+    SELECT * FROM promo_codes ORDER BY created_at DESC
+  `;
+  return rows;
+}
+
+export async function validatePromoCode(code: string, orderTotal: number): Promise<{
+  valid: boolean;
+  error?: string;
+  promo?: PromoCode;
+}> {
+  const { rows } = await sql<PromoCode>`
+    SELECT * FROM promo_codes WHERE UPPER(code) = UPPER(${code}) AND active = true
+  `;
+  const promo = rows[0];
+
+  if (!promo) return { valid: false, error: 'Invalid promo code' };
+  if (promo.expires_at && new Date(promo.expires_at) < new Date())
+    return { valid: false, error: 'This promo code has expired' };
+  if (promo.max_uses && promo.uses >= promo.max_uses)
+    return { valid: false, error: 'This promo code has reached its usage limit' };
+  if (promo.min_order && orderTotal < Number(promo.min_order))
+    return { valid: false, error: `Minimum order of $${Number(promo.min_order).toFixed(2)} required` };
+
+  return { valid: true, promo };
+}
+
+export async function incrementPromoUses(code: string): Promise<void> {
+  await sql`UPDATE promo_codes SET uses = uses + 1 WHERE UPPER(code) = UPPER(${code})`;
+}
+
+export async function createPromoCode(data: Omit<PromoCode, 'id' | 'uses' | 'created_at'>): Promise<PromoCode> {
+  const { rows } = await sql<PromoCode>`
+    INSERT INTO promo_codes (code, type, value, min_order, expires_at, active, max_uses)
+    VALUES (UPPER(${data.code}), ${data.type}, ${data.value}, ${data.min_order ?? null},
+            ${data.expires_at ?? null}, ${data.active}, ${data.max_uses ?? null})
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function deletePromoCode(id: number): Promise<void> {
+  await sql`DELETE FROM promo_codes WHERE id = ${id}`;
+}
+
+export async function togglePromoCode(id: number, active: boolean): Promise<void> {
+  await sql`UPDATE promo_codes SET active = ${active} WHERE id = ${id}`;
+}

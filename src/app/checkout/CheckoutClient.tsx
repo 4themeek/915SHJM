@@ -67,13 +67,34 @@ export default function CheckoutClient() {
   const [addressCorrection, setAddressCorrection] = useState<AddressCorrection | null>(null);
   const [showCorrectionPrompt, setShowCorrectionPrompt] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoApplied, setPromoApplied] = useState<{code: string; type: string; value: number} | null>(null);
+  const [promoError, setPromoError] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(50);
+
+  // Load free shipping threshold on mount
+  useState(() => {
+    fetch('/api/admin/settings').then(r => r.json()).then(d => {
+      if (d.free_shipping_threshold) setFreeShippingThreshold(parseFloat(d.free_shipping_threshold));
+    }).catch(() => {});
+  });
 
   const totalWeightOz = cart.reduce((sum, item) => {
     return sum + (PRODUCT_WEIGHTS[item.id] || 8) * item.qty;
   }, 0);
 
   const allFreeShipping = cart.every(item => item.sale);
-  const orderTotal = cartTotal + (selectedRate?.amount || 0);
+  const promoDiscount = promoApplied
+    ? promoApplied.type === 'percent'
+      ? cartTotal * (promoApplied.value / 100)
+      : Math.min(promoApplied.value, cartTotal)
+    : 0;
+
+  const shippingAmount = selectedRate?.amount || 0;
+  const qualifiesForFreeShipping = freeShippingThreshold > 0 && cartTotal >= freeShippingThreshold;
+  const effectiveShipping = qualifiesForFreeShipping ? 0 : shippingAmount;
+  const orderTotal = cartTotal - promoDiscount + effectiveShipping;
 
   function updateAddress(field: keyof Address, value: string) {
     setAddress(prev => ({ ...prev, [field]: value }));
@@ -175,6 +196,28 @@ export default function CheckoutClient() {
     }
   }
 
+  async function applyPromoCode() {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoError('');
+    try {
+      const res = await fetch('/api/validate-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoCode.trim(), orderTotal: cartTotal }),
+      });
+      const data = await res.json();
+      if (data.valid && data.promo) {
+        setPromoApplied({ code: data.promo.code, type: data.promo.type, value: Number(data.promo.value) });
+        setPromoError('');
+      } else {
+        setPromoError(data.error || 'Invalid promo code');
+        setPromoApplied(null);
+      }
+    } catch { setPromoError('Could not validate code. Try again.'); }
+    finally { setPromoLoading(false); }
+  }
+
   async function handleCheckout() {
     if (!selectedRate) return;
     setProcessing(true);
@@ -184,8 +227,10 @@ export default function CheckoutClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: cart,
-          shippingRate: selectedRate,
+          shippingRate: { ...selectedRate, amount: effectiveShipping },
           customerAddress: address,
+          promoCode: promoApplied?.code || null,
+          promoDiscount: promoDiscount,
         }),
       });
       const { sessionId, error } = await res.json();
@@ -459,7 +504,7 @@ export default function CheckoutClient() {
                 <div className={styles.totalRow}>
                   <span>Shipping ({selectedRate?.service})</span>
                   <span className={selectedRate?.amount === 0 ? styles.free : ''}>
-                    {selectedRate?.amount === 0 ? 'Free' : `$${selectedRate?.amount.toFixed(2)}`}
+                    {effectiveShipping === 0 ? 'Free' : `$${effectiveShipping.toFixed(2)}`}
                   </span>
                 </div>
                 <div className={`${styles.totalRow} ${styles.grandTotal}`}>

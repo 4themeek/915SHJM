@@ -121,6 +121,7 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
           <span className={styles.dashEmail}>{adminEmail}</span>
         </div>
         <div className={styles.dashHeaderRight}>
+          <Link href="/admin/settings" className={styles.dashViewSite}>⚙ Settings</Link>
           <Link href="/" className={styles.dashViewSite} target="_blank">View Site ↗</Link>
           <button className={styles.dashLogout} onClick={handleLogout}>Sign Out</button>
         </div>
