@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
 import styles from './donate.module.css';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
 const AMOUNTS = [
   { value: 25, label: '$25', desc: 'Provides images for one family' },
@@ -16,6 +19,7 @@ export default function DonateClient() {
   const [selected, setSelected] = useState(25);
   const [custom, setCustom] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState('');
 
   const isCustom = selected === 0;
   const finalAmount = isCustom ? Number(custom) : selected;
@@ -23,12 +27,28 @@ export default function DonateClient() {
   async function handleDonate() {
     if (!finalAmount || finalAmount < 1) return;
     setProcessing(true);
-    // TODO: create Stripe donation session via /api/donate endpoint
-    // For now, alert with placeholder message
-    setTimeout(() => {
-      alert(`Thank you for your generous gift of $${finalAmount}!\n\nStripe donation processing will be connected here. Contact your developer to finalize the /api/donate endpoint.`);
+    setError('');
+
+    try {
+      const res = await fetch('/api/donate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: finalAmount }),
+      });
+
+      const { sessionId, error: apiError } = await res.json();
+
+      if (apiError) throw new Error(apiError);
+
+      const stripe = await stripePromise;
+      if (stripe && sessionId) {
+        await stripe.redirectToCheckout({ sessionId });
+      }
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
       setProcessing(false);
-    }, 800);
+    }
   }
 
   return (
@@ -60,14 +80,22 @@ export default function DonateClient() {
         </div>
       )}
 
+      {error && (
+        <p style={{ color: 'var(--crimson)', fontFamily: 'var(--font-body)', fontSize: '0.95rem', margin: '0.75rem 0' }}>
+          ⚠ {error}
+        </p>
+      )}
+
       <button
         className={styles.donateBtn}
         onClick={handleDonate}
-        disabled={processing || (isCustom && !custom)}
+        disabled={processing || (isCustom && !custom) || finalAmount < 1}
       >
-        {processing ? 'Processing…' : `Donate ${finalAmount ? `$${finalAmount}` : ''} Securely via Stripe ✦`}
+        {processing
+          ? 'Redirecting to Stripe…'
+          : `Donate ${finalAmount ? `$${finalAmount}` : ''} Securely via Stripe ✦`}
       </button>
-      <p className={styles.note}>Secure payment processing by Stripe · Tax receipt provided</p>
+      <p className={styles.note}>Secure payment processing by Stripe · Tax receipt provided · 501(c)3 nonprofit</p>
     </>
   );
 }
