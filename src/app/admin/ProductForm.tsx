@@ -82,27 +82,28 @@ export default function ProductForm({ product, categories }: Props) {
     setSaving(true);
     setError('');
 
+    // Build payload explicitly — no spread to avoid override issues
     const payload = {
-      ...form,
+      name: newCat.trim() ? form.name : form.name,
       cat: newCat.trim() || form.cat,
+      price: form.price,
       start_price: parseFloat(form.start_price) || 0,
+      img: form.img,
+      desc: form.desc,
       weight_oz: parseInt(form.weight_oz) || 8,
-      sale_price: (() => {
-        console.log('sale_price debug - form.sale:', form.sale, 'form.sale_price:', form.sale_price, 'type:', typeof form.sale_price);
-        if (!form.sale) { console.log('returning null: sale is off'); return null; }
-        if (!form.sale_price || form.sale_price === '') { console.log('returning null: no price entered'); return null; }
-        const p = parseFloat(String(form.sale_price));
-        console.log('parsed price:', p);
-        return isNaN(p) || p <= 0 ? null : p;
-      })(),
-      sale_ends_at: (() => {
-        if (!form.sale || !form.sale_ends_at || form.sale_ends_at === '') return null;
-        try {
-          const d = new Date(form.sale_ends_at);
-          return isNaN(d.getTime()) ? null : d.toISOString().substring(0, 10);
-        } catch { return null; }
-      })(),
+      active: Boolean(form.active),
+      sale: Boolean(form.sale),
+      out_of_stock: Boolean(form.out_of_stock),
+      is_free: Boolean(form.is_free),
+      sale_price: form.sale && form.sale_price !== ''
+        ? parseFloat(String(form.sale_price)) || null
+        : null,
+      sale_ends_at: form.sale && form.sale_ends_at && form.sale_ends_at !== ''
+        ? form.sale_ends_at
+        : null,
     };
+
+    console.log('Full payload being sent:', JSON.stringify(payload));
 
     try {
       const url = isEdit ? `/api/admin/products/${product!.id}` : '/api/admin/products';
