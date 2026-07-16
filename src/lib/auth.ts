@@ -5,6 +5,7 @@ const SECRET = new TextEncoder().encode(
 );
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'info@thesacredhearts.org';
+export const ADMIN_EMAILS = ADMIN_EMAIL.split(',').map(e => e.trim().toLowerCase());
 const SESSION_COOKIE = 'sh_admin_session';
 
 // Generate a magic link token (expires in 15 minutes)

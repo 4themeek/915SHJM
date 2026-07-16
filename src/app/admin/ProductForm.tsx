@@ -88,8 +88,11 @@ export default function ProductForm({ product, categories }: Props) {
       start_price: parseFloat(form.start_price) || 0,
       weight_oz: parseInt(form.weight_oz) || 8,
       sale_price: (() => {
-        if (!form.sale || !form.sale_price || form.sale_price === '') return null;
-        const p = parseFloat(form.sale_price);
+        console.log('sale_price debug - form.sale:', form.sale, 'form.sale_price:', form.sale_price, 'type:', typeof form.sale_price);
+        if (!form.sale) { console.log('returning null: sale is off'); return null; }
+        if (!form.sale_price || form.sale_price === '') { console.log('returning null: no price entered'); return null; }
+        const p = parseFloat(String(form.sale_price));
+        console.log('parsed price:', p);
         return isNaN(p) || p <= 0 ? null : p;
       })(),
       sale_ends_at: (() => {
@@ -198,7 +201,7 @@ export default function ProductForm({ product, categories }: Props) {
                 <input className={styles.input} type="number" required min="1"
                   placeholder="8"
                   value={form.weight_oz} onChange={e => update('weight_oz', e.target.value)} />
-                <p className={styles.fieldHint}>Used for Shippo shipping rate calculation</p>
+                <p className={styles.fieldHint}>Used for shipping rate calculations</p>
               </div>
 
               {/* IMAGE UPLOAD */}

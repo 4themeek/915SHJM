@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateMagicToken, sendMagicLinkEmail, ADMIN_EMAIL } from '@/lib/auth';
+import { generateMagicToken, sendMagicLinkEmail, ADMIN_EMAILS } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
 
     // Only allow the designated admin email
-    if (!email || email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    if (!email || !ADMIN_EMAILS.includes(email.toLowerCase())) {
       // Return success even for wrong email (security: don't reveal valid emails)
       return NextResponse.json({ success: true });
     }
