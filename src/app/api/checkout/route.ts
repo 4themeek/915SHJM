@@ -61,9 +61,16 @@ export async function POST(req: NextRequest) {
       metadata: {
         source: 'sacred-hearts-website',
         shippo_rate_id: shippingRate?.id || 'free',
-        ship_to: customerAddress
-          ? `${customerAddress.street1}, ${customerAddress.city}, ${customerAddress.state} ${customerAddress.zip}`
-          : '',
+        ship_name: customerAddress?.name || '',
+        ship_street1: customerAddress?.street1 || '',
+        ship_street2: customerAddress?.street2 || '',
+        ship_city: customerAddress?.city || '',
+        ship_state: customerAddress?.state || '',
+        ship_zip: customerAddress?.zip || '',
+        ship_country: customerAddress?.country || 'US',
+        weight_oz: String(
+          items.reduce((sum: number, item: any) => sum + ((item.weight_oz || 8) * (item.qty || 1)), 0)
+        ),
       },
     });
 

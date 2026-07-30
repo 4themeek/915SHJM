@@ -295,3 +295,160 @@ export async function deletePromoCode(id: number): Promise<void> {
 export async function togglePromoCode(id: number, active: boolean): Promise<void> {
   await sql`UPDATE promo_codes SET active = ${active} WHERE id = ${id}`;
 }
+
+// ─────────────────────────────────────────────────────────────
+// ORDERS
+// ─────────────────────────────────────────────────────────────
+
+export interface DbOrder {
+  id: number;
+  stripe_session_id: string;
+  stripe_payment_intent: string | null;
+  customer_email: string | null;
+  customer_name: string | null;
+  amount_total: number;
+  currency: string;
+  shipping_name: string | null;
+  shipping_street1: string | null;
+  shipping_street2: string | null;
+  shipping_city: string | null;
+  shipping_state: string | null;
+  shipping_zip: string | null;
+  shipping_country: string | null;
+  weight_oz: number;
+  shippo_rate_id: string | null;
+  shippo_transaction_id: string | null;
+  label_url: string | null;
+  tracking_number: string | null;
+  tracking_url: string | null;
+  carrier: string | null;
+  line_items: any;
+  status: string;
+  refund_request_id: string | null;
+  refund_status: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function createOrdersTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS orders (
+      id SERIAL PRIMARY KEY,
+      stripe_session_id TEXT UNIQUE NOT NULL,
+      stripe_payment_intent TEXT,
+      customer_email TEXT,
+      customer_name TEXT,
+      amount_total NUMERIC(10,2) NOT NULL DEFAULT 0,
+      currency TEXT NOT NULL DEFAULT 'usd',
+      shipping_name TEXT,
+      shipping_street1 TEXT,
+      shipping_street2 TEXT,
+      shipping_city TEXT,
+      shipping_state TEXT,
+      shipping_zip TEXT,
+      shipping_country TEXT DEFAULT 'US',
+      weight_oz INTEGER NOT NULL DEFAULT 8,
+      shippo_rate_id TEXT,
+      shippo_transaction_id TEXT,
+      label_url TEXT,
+      tracking_number TEXT,
+      tracking_url TEXT,
+      carrier TEXT,
+      line_items JSONB,
+      status TEXT NOT NULL DEFAULT 'paid',
+      refund_request_id TEXT,
+      refund_status TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+}
+
+export async function orderExistsBySessionId(sessionId: string): Promise<boolean> {
+  const { rows } = await sql`SELECT id FROM orders WHERE stripe_session_id = ${sessionId}`;
+  return rows.length > 0;
+}
+
+export async function createOrder(data: {
+  stripe_session_id: string;
+  stripe_payment_intent: string | null;
+  customer_email: string | null;
+  customer_name: string | null;
+  amount_total: number;
+  currency: string;
+  shipping_name: string | null;
+  shipping_street1: string | null;
+  shipping_street2: string | null;
+  shipping_city: string | null;
+  shipping_state: string | null;
+  shipping_zip: string | null;
+  shipping_country: string | null;
+  weight_oz: number;
+  shippo_rate_id: string | null;
+  line_items: any;
+}): Promise<DbOrder> {
+  const { rows } = await sql<DbOrder>`
+    INSERT INTO orders (
+      stripe_session_id, stripe_payment_intent, customer_email, customer_name,
+      amount_total, currency, shipping_name, shipping_street1, shipping_street2,
+      shipping_city, shipping_state, shipping_zip, shipping_country, weight_oz,
+      shippo_rate_id, line_items, status
+    )
+    VALUES (
+      ${data.stripe_session_id}, ${data.stripe_payment_intent}, ${data.customer_email}, ${data.customer_name},
+      ${data.amount_total}, ${data.currency}, ${data.shipping_name}, ${data.shipping_street1}, ${data.shipping_street2},
+      ${data.shipping_city}, ${data.shipping_state}, ${data.shipping_zip}, ${data.shipping_country}, ${data.weight_oz},
+      ${data.shippo_rate_id}, ${JSON.stringify(data.line_items)}::jsonb, 'paid'
+    )
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function getAllOrdersAdmin(): Promise<DbOrder[]> {
+  const { rows } = await sql<DbOrder>`SELECT * FROM orders ORDER BY created_at DESC`;
+  return rows;
+}
+
+export async function getOrderById(id: number): Promise<DbOrder | null> {
+  const { rows } = await sql<DbOrder>`SELECT * FROM orders WHERE id = ${id}`;
+  return rows[0] || null;
+}
+
+export async function saveLabelToOrder(id: number, data: {
+  shippo_transaction_id: string;
+  label_url: string;
+  tracking_number: string;
+  tracking_url: string | null;
+  carrier: string;
+}): Promise<DbOrder> {
+  const { rows } = await sql<DbOrder>`
+    UPDATE orders SET
+      shippo_transaction_id = ${data.shippo_transaction_id},
+      label_url = ${data.label_url},
+      tracking_number = ${data.tracking_number},
+      tracking_url = ${data.tracking_url},
+      carrier = ${data.carrier},
+      status = 'shipped',
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function saveRefundToOrder(id: number, data: {
+  refund_request_id: string;
+  refund_status: string;
+}): Promise<DbOrder> {
+  const { rows } = await sql<DbOrder>`
+    UPDATE orders SET
+      refund_request_id = ${data.refund_request_id},
+      refund_status = ${data.refund_status},
+      status = 'cancelled',
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return rows[0];
+}
