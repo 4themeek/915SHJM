@@ -14,6 +14,11 @@ export default function CartDrawer() {
     router.push('/checkout');
   }
 
+  function handleContinueShopping() {
+    closeCart();
+    router.push('/shop');
+  }
+
   return (
     <>
       <div
@@ -32,6 +37,9 @@ export default function CartDrawer() {
             <div className={styles.empty}>
               <p>Your cart is empty.</p>
               <p>Browse our collection of sacred prints and plaques.</p>
+              <button className={styles.continueBtn} onClick={handleContinueShopping}>
+                Continue Shopping
+              </button>
             </div>
           ) : (
             cart.map((item) => (
@@ -68,6 +76,9 @@ export default function CartDrawer() {
             </div>
             <button className={styles.checkoutBtn} onClick={handleCheckout}>
               Proceed to Checkout
+            </button>
+            <button className={styles.continueBtn} onClick={handleContinueShopping}>
+              Continue Shopping
             </button>
             <p className={styles.note}>Secure checkout · All major cards accepted</p>
           </div>
