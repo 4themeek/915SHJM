@@ -12,6 +12,7 @@ export default function ImageUploader({ currentUrl, onUpload }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(currentUrl);
+  const [previewFailed, setPreviewFailed] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -35,6 +36,7 @@ export default function ImageUploader({ currentUrl, onUpload }: Props) {
     // Show local preview immediately
     const localUrl = URL.createObjectURL(file);
     setPreview(localUrl);
+    setPreviewFailed(false);
 
     try {
       const formData = new FormData();
@@ -92,15 +94,20 @@ export default function ImageUploader({ currentUrl, onUpload }: Props) {
       {/* CURRENT IMAGE PREVIEW */}
       {preview && (
         <div className={styles.previewWrap}>
-          <img
-            src={preview}
-            alt="Product preview"
-            className={styles.preview}
-            onError={() => {
-              setPreview('');
-              onUpload('');
-            }}
-          />
+          {previewFailed ? (
+            <div className={styles.preview}>
+              <p className={styles.error} style={{ margin: 0 }}>
+                ⚠ Preview unavailable — the saved image URL is unchanged.
+              </p>
+            </div>
+          ) : (
+            <img
+              src={preview}
+              alt="Product preview"
+              className={styles.preview}
+              onError={() => setPreviewFailed(true)}
+            />
+          )}
           <div className={styles.previewActions}>
             <button
               type="button"
@@ -164,6 +171,7 @@ export default function ImageUploader({ currentUrl, onUpload }: Props) {
           value={preview}
           onChange={e => {
             setPreview(e.target.value);
+            setPreviewFailed(false);
             onUpload(e.target.value);
           }}
         />
