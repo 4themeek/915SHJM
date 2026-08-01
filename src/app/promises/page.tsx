@@ -129,7 +129,7 @@ export default function PromisesPage() {
             {PROMISES.map((p) => (
               <div key={p.number} className={`${styles.card} ${p.isGreat ? styles.great : ''}`}>
                 <div className={styles.number}>
-                  {p.isGreat ? '✦' : p.number}
+                  {p.number}
                 </div>
                 {p.isGreat && (
                   <p className={styles.greatLabel}>The Great Promise</p>
