@@ -1,6 +1,13 @@
 # The Sacred Hearts — Next.js Website
 
-A complete e-commerce website for The Sacred Hearts ministry, built with Next.js 14, TypeScript, and Stripe.
+A complete e-commerce website for The Sacred Hearts ministry, built with Next.js 15, TypeScript, @vercel/postgres (Neon), Stripe, and Shippo.
+
+> **See [PROJECT_STATUS.md](PROJECT_STATUS.md) for current project state** — what's live, what's broken, and what's next. This README is a general orientation guide; PROJECT_STATUS.md is the up-to-date working notes.
+
+**What's actually in the app today** (this section corrects some now-outdated claims further down in this file):
+- Products live in a **Postgres database**, managed through an admin panel at `/admin` (magic-link email login) — not directly in `src/lib/products.ts`. That file is fallback/seed data only, used if the database is unreachable.
+- Full **order tracking system**: a Stripe webhook saves paid orders, and `/admin/orders` lets you purchase and void Shippo shipping labels.
+- Admin magic-link login emails are already wired up (Resend). The **contact form is not** — see the Contact Form section below, and PROJECT_STATUS.md.
 
 ---
 
@@ -22,16 +29,10 @@ A complete e-commerce website for The Sacred Hearts ministry, built with Next.js
 2. Put it in the `public/` folder
 3. The site will display it automatically in the hero and footer
 
-### Step 4 — Add Stripe keys (to go live)
-In your Vercel project dashboard → Settings → Environment Variables, add:
+### Step 4 — Add environment variables (to go live)
+See [`.env.example`](.env.example) for the full list with explanations — Stripe, Shippo, admin login, Brevo (login emails), and Postgres are all required for the site to fully work. Set these in Vercel project dashboard → Settings → Environment Variables.
 
-| Key | Value |
-|-----|-------|
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` (from Stripe dashboard) |
-| `STRIPE_SECRET_KEY` | `sk_live_...` (from Stripe dashboard) |
-| `NEXT_PUBLIC_SITE_URL` | `https://www.thesacredhearts.org` |
-
-> For testing first, use `pk_test_...` and `sk_test_...` keys instead.
+> For testing Stripe first, use `pk_test_...` and `sk_test_...` keys instead of live ones.
 
 ### Step 5 — Point your domain
 In Vercel → Settings → Domains, add `thesacredhearts.org` and follow the DNS instructions.
@@ -40,11 +41,11 @@ In Vercel → Settings → Domains, add `thesacredhearts.org` and follow the DNS
 
 ## 📝 Making Updates
 
-### Update product prices or descriptions
-Edit `src/lib/products.ts` — all 39 products are listed there with clear comments.
+### Update product prices, descriptions, or images
+Do this through the admin panel at `/admin` (magic-link login) → click a product → edit → Save. Products live in the Postgres database, **not** in `src/lib/products.ts` — that file is only a fallback used if the database is unreachable, and editing it won't change the live site.
 
 ### Add a new product
-In `src/lib/products.ts`, copy any existing product block and update the fields. Increment the `id` number.
+Use `/admin` → "+ Add New Product". (You can also add a matching entry to `src/lib/products.ts` if you want it available as fallback data too, but it's optional.)
 
 ### Change site colors
 Edit `src/styles/globals.css` — all colors are CSS variables at the top:
@@ -80,9 +81,9 @@ Currently products show starting prices. To add exact per-size pricing:
 
 ---
 
-## 📧 Contact Form
+## 📧 Contact Form — ⚠ currently non-functional
 
-The contact form is ready but needs an email service to actually send messages. Options:
+**Important:** `src/app/contact/ContactForm.tsx` currently does nothing but show a fake "Sending…" spinner and then "Message Sent!" — it never actually sends the message anywhere (`handleSubmit` has a `// TODO: connect to email service` and just fakes success after a timeout). Visitors submitting this form believe they've reached you, but nothing happens. This should be fixed before relying on it. Options:
 
 **Easiest: Formspree** (free tier, no code needed)
 1. Sign up at [formspree.io](https://formspree.io)
@@ -96,34 +97,40 @@ The contact form is ready but needs an email service to actually send messages. 
 ## 📁 Project Structure
 
 ```
-sacred-hearts/
+915SHJM/
 ├── public/
-│   └── logo.png          ← PUT YOUR LOGO HERE
+│   ├── logo.png
+│   └── images/products/         ← Product images (local static files)
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx             ← Homepage
+│   │   ├── page.tsx              ← Homepage
 │   │   ├── shop/
-│   │   │   ├── page.tsx         ← Shop listing
-│   │   │   └── [id]/page.tsx    ← Product detail
-│   │   ├── about/page.tsx
-│   │   ├── contact/page.tsx
-│   │   ├── donate/page.tsx
-│   │   ├── faq/page.tsx
-│   │   ├── shipping/page.tsx
-│   │   ├── order-success/page.tsx
-│   │   └── api/checkout/route.ts  ← Stripe backend
+│   │   │   ├── page.tsx          ← Shop listing (reads DB via ShopClient)
+│   │   │   └── [id]/page.tsx     ← Product detail
+│   │   ├── admin/                ← Admin panel (magic-link login at /admin)
+│   │   │   ├── dashboard/        ← Product management
+│   │   │   ├── orders/           ← Order tracking + Shippo labels
+│   │   │   ├── settings/         ← Promo codes, sale dates
+│   │   │   └── products/[id]/    ← Edit/add product form
+│   │   ├── api/
+│   │   │   ├── checkout/route.ts         ← Stripe Checkout session
+│   │   │   ├── webhooks/stripe/route.ts  ← Saves paid orders to DB
+│   │   │   ├── shipping-rates/route.ts   ← Shippo rate quotes
+│   │   │   ├── donate/route.ts
+│   │   │   └── admin/                    ← Session-gated CRUD + orders/labels
+│   │   ├── about/, contact/, donate/, faq/, shipping/, order-success/
+│   │   ├── promises/, immaculate-heart/, holy-spirit/  ← Devotional content pages
+│   │   └── checkout/CheckoutClient.tsx
 │   ├── components/
-│   │   ├── Navbar.tsx
-│   │   ├── Footer.tsx
-│   │   ├── ProductCard.tsx
-│   │   ├── CartDrawer.tsx
-│   │   └── Toast.tsx
+│   │   ├── Navbar.tsx, Footer.tsx, ProductCard.tsx, CartDrawer.tsx
 │   ├── lib/
-│   │   ├── products.ts       ← ALL PRODUCTS LIVE HERE
-│   │   └── cart-context.tsx  ← Shopping cart logic
-│   └── styles/
-│       └── globals.css       ← Colors & design system
-├── .env.example              ← Copy to .env.local for local dev
+│   │   ├── db.ts              ← All Postgres queries (products, orders, promos, settings)
+│   │   ├── products.ts        ← Fallback/seed data ONLY, not the live source of truth
+│   │   ├── auth.ts            ← Admin session + magic-link logic
+│   │   └── cart-context.tsx   ← Shopping cart logic
+│   └── styles/globals.css     ← Colors & design system (CSS variables)
+├── .env.example                ← Copy to .env.local for local dev; see for full var list
+├── PROJECT_STATUS.md            ← Current state, known bugs, next steps — read this first
 ├── next.config.js
 ├── package.json
 └── tsconfig.json
@@ -131,18 +138,18 @@ sacred-hearts/
 
 ---
 
-## 🛠 Local Development (Optional)
-
-If you want to run the site on your own computer:
+## 🛠 Local Development
 
 ```bash
 # Install Node.js from nodejs.org first, then:
 npm install
 cp .env.example .env.local
-# Fill in your Stripe keys in .env.local
+# Fill in real values in .env.local — see .env.example for what each one is for
 npm run dev
 # Open http://localhost:3000
 ```
+
+Note: if `POSTGRES_URL` isn't set (or can't connect), the site automatically falls back to the static seed data in `src/lib/products.ts` — fine for UI-only work, but any admin panel / order / database feature needs a real, working Postgres connection.
 
 ---
 
