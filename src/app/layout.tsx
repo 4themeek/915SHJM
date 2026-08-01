@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import '@/styles/globals.css';
 import { CartProvider } from '@/lib/cart-context';
 import Navbar from '@/components/Navbar';
@@ -49,6 +50,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CartDrawer />
           <Toast />
         </CartProvider>
+
+        {/* Statcounter */}
+        <Script id="statcounter-vars" strategy="afterInteractive">
+          {`
+            var sc_project=13339420;
+            var sc_invisible=1;
+            var sc_security="cb11581c";
+          `}
+        </Script>
+        <Script
+          src="https://www.statcounter.com/counter/counter.js"
+          strategy="afterInteractive"
+        />
+        <noscript>
+          <div className="statcounter">
+            <a title="Web Analytics" href="https://statcounter.com/" target="_blank" rel="noreferrer">
+              <img
+                className="statcounter"
+                src="https://c.statcounter.com/13339420/0/cb11581c/1/"
+                alt="Web Analytics"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </a>
+          </div>
+        </noscript>
       </body>
     </html>
   );
