@@ -78,8 +78,7 @@
 .number {
   font-family: var(--font-display);
   font-size: 2rem;
-  color: var(--gold);
-  opacity: 0.4;
+  color: var(--crimson-light);
   line-height: 1;
   margin-bottom: 1rem;
 }
