@@ -15,10 +15,10 @@ export const metadata: Metadata = {
 };
 
 const INFO_CARDS = [
-  { icon: '✦', title: 'Free Shipping', desc: 'Most orders ship free within the United States' },
-  { icon: '✝', title: 'Tax-Deductible', desc: '501(c)3 nonprofit — every purchase is a donation' },
+  { icon: '✦', title: 'Free Shipping', desc: 'Orders over $50 qualify to ship free within the United States' },
+  { icon: '✝', title: 'Tax-Deductible', desc: '501(c)3 nonprofit donations' },
   { icon: '♥', title: 'Reduced Rates', desc: 'Financial assistance available — just contact us' },
-  { icon: '☎', title: 'Personal Service', desc: 'Mon–Fri 10–5 EST · 513.741.3400' },
+  { icon: '☎', title: 'Personal Service - Call Us!', desc: 'Mon–Fri 10–5 EST · 513.741.3400' },
 ];
 
 export default async function HomePage() {
