@@ -146,12 +146,14 @@ export default function PromisesPage() {
       <div className="content-block" style={{ maxWidth: '860px' }}>
         <h2>The First Friday Devotion</h2>
         <p>
-          The Twelfth Promise — known as the Great Promise — is obtained through the First Friday Devotion:
-          receiving Holy Communion on nine consecutive First Fridays of the month, offered in reparation
-          for sins committed against the Sacred Heart of Jesus.
+          <strong>
+            The Twelfth Promise — known as the Great Promise — is obtained through the First Friday Devotion:
+            receiving Holy Communion on nine consecutive First Fridays of the month, offered in reparation
+            for sins committed against the Sacred Heart of Jesus.
+          </strong>
         </p>
         <p>
-          Friday is significant as it recalls Good Friday, when Christ laid down His life for us. Those who
+          <strong>Friday is significant as it recalls Good Friday, when Christ laid down His life for us.</strong> Those who
           take up this devotion are promised the grace of final perseverance — that they shall not die without
           receiving the sacraments, and that the Sacred Heart will be their refuge at the last hour.
         </p>
