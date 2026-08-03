@@ -1,6 +1,6 @@
 # Sacred Hearts (915SHJM) — Project Status
 
-**Last updated:** August 2, 2026
+**Last updated:** August 3, 2026
 **Repo:** github.com/4themeek/915SHJM (main branch, auto-deploys to Vercel)
 **Live site:** https://www.thesacredhearts.org
 **Stack:** Next.js 15, @vercel/postgres (Neon-backed), Stripe, Shippo, Vercel Blob (unused/private — see below)
@@ -92,6 +92,23 @@ All images live at `public/images/products/product-{id}.{ext}` as local static f
 - **Bot-probe traffic blocked at the edge:** the site was getting massive automated WordPress-vulnerability-scanner traffic (millions of requests/day) against `/wp-content/*`, `/wp-admin/*`, `/wp-login.php`, `/xmlrpc.php`, `/.env` — none of which are real routes in this Next.js app. Added `src/middleware.ts` to return an immediate 404 for those exact paths before they reach the rest of the app. Note: `middleware.ts` must live inside `src/` for this project (it uses the `src/` directory convention) — putting it at the project root silently does nothing, which is a mistake worth remembering if this ever needs editing.
   - Considered a `vercel.json` redirects entry first, but Vercel's `redirects` only supports status codes 301/302/303/307/308 — `404` isn't valid there and would have failed deployment. Middleware was the correct, safe mechanism instead.
   - Worth periodically checking Vercel's traffic/Firewall logs to confirm this actually reduced the bot noise, since Vercel's Firewall may already be intercepting some of this traffic even earlier in the pipeline (see the wp-content firewall note in section 2).
+
+---
+
+## 7. Shop Under Construction mode (shipped this session)
+
+Admin-togglable mode that shows a read-only product catalog on the Shop pages and disables purchasing sitewide, while leaving the rest of the site (About, Promises, Donate, Contact, etc.) completely live. Useful for pausing orders during changes without taking the whole site down.
+
+- **Toggle:** `/admin/settings` → "🚧 Shop Under Construction" section, with a status indicator and on/off button (confirms before turning on).
+- **Storage:** a single settings-table key, `shop_maintenance_mode` (`'true'`/`'false'`), read via the existing `getSetting`/`setSetting` helpers in `src/lib/db.ts`.
+- **How it's wired:** the flag is fetched once in the root layout (`src/app/layout.tsx`) and passed into `CartProvider` (`src/lib/cart-context.tsx`), which exposes it via `useCart().shopMaintenance` to any client component — that's how `ProductCard`, `AddToCartButton`, and `Navbar` react to it without prop drilling.
+- **What it does when on:**
+  - `/shop` shows a banner ("Shop Under Construction... call to order") above the normal product grid; every `ProductCard` shows a "Shop Under Construction" note instead of its Add to Cart / Contact / Out of Stock button.
+  - `/shop/[id]` shows the same "call to order" note in place of the Add to Cart button.
+  - The cart icon disappears from the navbar (desktop, mobile bar, and mobile menu) sitewide — including on the homepage's featured-products section, since it also uses `ProductCard`.
+  - `/checkout` redirects to `/shop`, so a visitor who already had items in a cart from before the toggle was flipped can't complete a purchase.
+- **Fails open:** if the `getSetting` call errors for any reason (e.g. a transient DB hiccup), it's treated as off — the shop stays fully functional rather than accidentally locking up.
+- Note: an earlier version of this feature blocked the *entire* site via `src/middleware.ts` (a raw HTML 503 page at the edge). That approach was replaced by this narrower one at the user's request — if you ever see references to a full-site "Under Construction" HTML page in old context, that's superseded.
 
 ---
 
