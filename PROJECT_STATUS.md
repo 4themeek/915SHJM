@@ -43,16 +43,18 @@ Stripe collects from the customer; Shippo bills your own card on file for the la
 
 ---
 
-## 2. Product images — root cause fixed, partial recovery done
+## 2. Product images — FULLY RESOLVED
 
 **What happened:** an admin bulk price-editing session (37 products, one at a time) wiped the `img` field to an empty string on 36 of 37 products. Root cause: [ImageUploader.tsx](src/app/admin/ImageUploader.tsx) used to call `onUpload('')` whenever its preview thumbnail failed to load — and every preview *was* failing, because the images were hosted at `thesacredhearts.org/wp-content/uploads/...`, and Vercel's Firewall has a default managed rule that challenges/blocks any request matching WordPress attack-surface paths (`/wp-content/`, `/wp-admin/`, etc.) — independent of the separate "Attack Challenge Mode" toggle. So every product the admin saved during that session got its real image URL silently deleted.
 
 **Fixed:** ImageUploader no longer wipes the saved value on a preview failure — it now just shows "Preview unavailable" while keeping the real URL intact.
 
-**Recovered: all 36 of 36 wiped products.** 29 from a Feb 19, 2026 WordPress `/wp-content/uploads/` backup (`backup_2026-02-19-1947_The_Sacred_Hearts_..._uploads.zip` in the user's Downloads). The remaining 7 — whose images were uploaded to WordPress *after* that backup, so weren't in it — were supplied directly by the site owner from their own phone/photo backup (`IMG_3804`, `IMG_3561`, `IMG_3805`, `IMG_3825`, `IMG_3793`, `IMG_3795`, `IMG_3803`, matched by content to products 9, 10, 13, 14, 15, 16, 17). All images live at `public/images/products/product-{id}.{ext}` (local static files — sidesteps the wp-content firewall issue entirely), verified live on the site.
+**Recovered: all 37 of 37 products** now have working images, verified live on the site:
+- 29 from a Feb 19, 2026 WordPress `/wp-content/uploads/` backup (`backup_2026-02-19-1947_The_Sacred_Hearts_..._uploads.zip` in the user's Downloads).
+- 7 whose images were uploaded to WordPress *after* that backup (so weren't in it) — supplied directly by the site owner from their own phone/photo backup, matched by content to products 9, 10, 13, 14, 15, 16, 17.
+- "Parish Display" (id 33) — was never wiped by the data-loss bug, but still pointed at the blocked wp-content URL; its file was also in the Feb 19 backup.
 
-**Still outstanding:**
-- **"Parish Display" (id 33)** was never wiped (it wasn't edited in that session), but its `img` still points at the blocked `wp-content` URL, so it's *also* currently broken — just from the firewall issue, not the data-loss bug. Its file **is** already in the Feb 19 backup (`uploads/2021/02/display-box-3-300x300.jpg`) — this one's a quick fix, just wasn't in scope of the recovery batches so far.
+All images live at `public/images/products/product-{id}.{ext}` as local static files, which sidesteps the wp-content firewall issue entirely going forward. Nothing outstanding here.
 
 ---
 
