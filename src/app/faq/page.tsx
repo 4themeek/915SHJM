@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 const FAQS = [
   { q: 'Are purchases tax-deductible?', a: 'Yes! The Sacred Hearts is a registered 501(c)3 nonprofit. Every purchase is a tax-deductible donation and you will receive a receipt for your records.' },
-  { q: 'Do you offer free shipping?', a: 'Most of our prints and plaques ship free within the United States. Any product marked "Free Shipping" in the title ships at no charge to US addresses.' },
+  { q: 'Do you offer free shipping?', a: 'Free shipping is available for orders over $50 right now (August 2026). This is subject to change and other promotions.' },
   { q: 'Can I get images at a reduced price if I cannot afford them?', a: 'Absolutely. We believe no family should be without these sacred images for financial reasons. Please contact us directly at info@thesacredhearts.org or call 513.741.3400 and we will be happy to assist you.' },
   { q: 'What sizes are available?', a: 'Most prints and plaques are available in multiple sizes, reflected in the price ranges shown. Contact us or proceed to checkout to select your preferred size.' },
   { q: 'How long does shipping take?', a: 'Orders are processed within 2–3 business days. Standard delivery within the United States generally takes 5–10 business days from the date of shipment. Contact us for expedited options.' },
