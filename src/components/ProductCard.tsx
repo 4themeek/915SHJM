@@ -56,7 +56,12 @@ export default function ProductCard({ product }: Props) {
           <p className={styles.price}>{product.price}</p>
         )}
         {shopMaintenance ? (
-          <p className={styles.unavailableNote}>Shop Under Construction</p>
+          <p
+            className={styles.unavailableNote}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          >
+            Shop Under Construction
+          </p>
         ) : product.outOfStock ? (
           <button className={styles.btnDisabled} disabled>Out of Stock</button>
         ) : product.isFree ? (
