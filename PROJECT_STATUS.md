@@ -1,6 +1,6 @@
 # Sacred Hearts (915SHJM) — Project Status
 
-**Last updated:** August 1, 2026
+**Last updated:** August 2, 2026
 **Repo:** github.com/4themeek/915SHJM (main branch, auto-deploys to Vercel)
 **Live site:** https://www.thesacredhearts.org
 **Stack:** Next.js 15, @vercel/postgres (Neon-backed), Stripe, Shippo, Vercel Blob (unused/private — see below)
@@ -49,21 +49,10 @@ Stripe collects from the customer; Shippo bills your own card on file for the la
 
 **Fixed:** ImageUploader no longer wipes the saved value on a preview failure — it now just shows "Preview unavailable" while keeping the real URL intact.
 
-**Recovered:** 29 of the 36 wiped products, using a Feb 19, 2026 WordPress `/wp-content/uploads/` backup (`backup_2026-02-19-1947_The_Sacred_Hearts_..._uploads.zip` in the user's Downloads). Images were copied into `public/images/products/product-{id}.{ext}` (local static files — sidesteps the wp-content firewall issue entirely) and the database `img` column updated to match.
+**Recovered: all 36 of 36 wiped products.** 29 from a Feb 19, 2026 WordPress `/wp-content/uploads/` backup (`backup_2026-02-19-1947_The_Sacred_Hearts_..._uploads.zip` in the user's Downloads). The remaining 7 — whose images were uploaded to WordPress *after* that backup, so weren't in it — were supplied directly by the site owner from their own phone/photo backup (`IMG_3804`, `IMG_3561`, `IMG_3805`, `IMG_3825`, `IMG_3793`, `IMG_3795`, `IMG_3803`, matched by content to products 9, 10, 13, 14, 15, 16, 17). All images live at `public/images/products/product-{id}.{ext}` (local static files — sidesteps the wp-content firewall issue entirely), verified live on the site.
 
-**Still broken / outstanding:**
-- **7 products** need original photos from the site owner — their images were uploaded to WordPress *after* the Feb 19 backup, so they're not in it. Filenames look like real phone photos (`IMG_3804`, `IMG_3561`, `IMG_3805`, `IMG_3825`, `IMG_3793`, `IMG_3795`, `IMG_3803`):
-  - id 9 — Immaculate Heart of Mary, 8×8 in.
-  - id 10 — Picture Stands
-  - id 13 — St. Carlo Acutis, 8×8 in.
-  - id 14 — St. Joseph, Terror of Demons, 8×10 in.
-  - id 15 — The Heart of Jesus (Cor Salvatoris), 6×8 in.
-  - id 16 — The Immaculate Heart of Mary, 6×8 in.
-  - id 17 — The Sacred Heart of Jesus (Cor Salvatoris), 8×8 in.
-
-  Once the photos are supplied, same fix as the other 29: drop into `public/images/products/`, update that product's `img` column.
-
-- **"Parish Display" (id 33)** was never wiped (it wasn't edited in that session), but its `img` still points at the blocked `wp-content` URL, so it's *also* currently broken — just from the firewall issue, not the data-loss bug. Its file **is** already in the Feb 19 backup (`uploads/2021/02/display-box-3-300x300.jpg`) — this one's a quick fix, just wasn't in scope of the original 36-product recovery batch.
+**Still outstanding:**
+- **"Parish Display" (id 33)** was never wiped (it wasn't edited in that session), but its `img` still points at the blocked `wp-content` URL, so it's *also* currently broken — just from the firewall issue, not the data-loss bug. Its file **is** already in the Feb 19 backup (`uploads/2021/02/display-box-3-300x300.jpg`) — this one's a quick fix, just wasn't in scope of the recovery batches so far.
 
 ---
 
@@ -81,7 +70,7 @@ Stripe collects from the customer; Shippo bills your own card on file for the la
 
 ## 4. Infrastructure notes learned this session
 
-- **Postgres env vars are marked "Sensitive" in Vercel** (`POSTGRES_URL`, `POSTGRES_URL_NON_POOLING`, `DATABASE_URL`, `POSTGRES_PRISMA_URL`, etc., via the Neon integration). Sensitive vars are **write-only** — once marked sensitive, Vercel will never let you read the real value back, via CLI (`vercel env pull`) or dashboard, for anyone, ever. This means **no local script can get a working direct database connection.** Any future data migration/fix needs to happen either through the app's own admin-session-gated API routes (add a temporary one-off route, hit it once while logged into `/admin`, then delete it — this is the pattern used to recover the 29 images above), or by temporarily un-marking a variable as sensitive in the dashboard (not recommended without good reason).
+- **Postgres env vars are marked "Sensitive" in Vercel** (`POSTGRES_URL`, `POSTGRES_URL_NON_POOLING`, `DATABASE_URL`, `POSTGRES_PRISMA_URL`, etc., via the Neon integration). Sensitive vars are **write-only** — once marked sensitive, Vercel will never let you read the real value back, via CLI (`vercel env pull`) or dashboard, for anyone, ever. This means **no local script can get a working direct database connection.** Any future data migration/fix needs to happen either through the app's own admin-session-gated API routes (add a temporary one-off route, hit it once while logged into `/admin`, then delete it — this is the pattern used to recover all 36 images above), or by temporarily un-marking a variable as sensitive in the dashboard (not recommended without good reason).
 - **Vercel CLI is installed and linked** on the user's machine (`C:\2026-Claude\SacredHearts` → `vercel link` → project `amdg26/915-shjm`). `vercel env pull .env.local` works for non-sensitive vars.
 - **`.env.local` note:** if you (Claude) ever run `vercel env pull` from a sandboxed tool environment, a safety filter may scrub secret-shaped values to a placeholder before they hit disk — but per the Postgres discovery above, that turned out to be moot for the DB vars specifically, since they're unreadable by design regardless of who's asking.
 
@@ -92,6 +81,15 @@ Stripe collects from the customer; Shippo bills your own card on file for the la
 - Cart drawer: added a "Continue Shopping" button (both the populated-cart and empty-cart states) that closes the drawer and routes to `/shop`.
 - Product prices bumped ~4pt larger and bold, on both the `/shop` grid tiles and individual `/shop/[id]` pages. Also added CSS for the sale-price/original-price display, which had no styling at all before (was rendering unstyled if a sale was active).
 - `/promises` page: promise numbers recolored from faded 40%-opacity gold to solid crimson-light (a shade lighter than the section title's crimson). The Great Promise card now shows "12" (previously a ✦ star) above "The Great Promise" label, sized to match the other numbers +4pt, in a lighter rose-crimson for contrast against its dark gradient background. Bolded the key sentences about the Twelfth Promise and Good Friday under "The First Friday Devotion."
+
+---
+
+## 6. Traffic / analytics hardening (shipped this session)
+
+- **Statcounter analytics** added site-wide via `next/script` in the root layout (`src/app/layout.tsx`), so it loads on every page including client-side navigations.
+- **Bot-probe traffic blocked at the edge:** the site was getting massive automated WordPress-vulnerability-scanner traffic (millions of requests/day) against `/wp-content/*`, `/wp-admin/*`, `/wp-login.php`, `/xmlrpc.php`, `/.env` — none of which are real routes in this Next.js app. Added `src/middleware.ts` to return an immediate 404 for those exact paths before they reach the rest of the app. Note: `middleware.ts` must live inside `src/` for this project (it uses the `src/` directory convention) — putting it at the project root silently does nothing, which is a mistake worth remembering if this ever needs editing.
+  - Considered a `vercel.json` redirects entry first, but Vercel's `redirects` only supports status codes 301/302/303/307/308 — `404` isn't valid there and would have failed deployment. Middleware was the correct, safe mechanism instead.
+  - Worth periodically checking Vercel's traffic/Firewall logs to confirm this actually reduced the bot noise, since Vercel's Firewall may already be intercepting some of this traffic even earlier in the pipeline (see the wp-content firewall note in section 2).
 
 ---
 
