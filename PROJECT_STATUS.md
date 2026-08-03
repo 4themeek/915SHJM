@@ -11,6 +11,8 @@
 
 Paste this file's contents in, or just say *"Picking back up on Sacred Hearts — check PROJECT_STATUS.md."* It covers what's done, what's broken, and what's next.
 
+**For a fast-scan checklist of outstanding work only** (no narrative context), see [TODO.md](TODO.md). Keep the two in sync — TODO.md pulls its items from the "config steps" and "known bugs" sections below.
+
 **Local clone:** `C:\2026-Claude\SacredHearts`. Vercel CLI is installed and linked (`vercel link` → `amdg26/915-shjm`) — `vercel env pull .env.local` works for most env vars, but see the "Sensitive env vars" gotcha below before assuming a local script can hit the database.
 
 ---
