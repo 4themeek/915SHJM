@@ -197,6 +197,26 @@ export default function ImmaculateHeartPage() {
         <p>Eight centuries of promises, revelations, and divine love</p>
       </div>
 
+      {/* AUGUST — MONTH OF THE IMMACULATE HEART */}
+      <div className="content-block" style={{ maxWidth: '860px' }}>
+        <div className={styles.augustBox}>
+          <p className={styles.augustEyebrow}>A Timely Devotion</p>
+          <h2 className={styles.augustTitle}>August: The Month of the Immaculate Heart of Mary</h2>
+          <p className={styles.augustText}>
+            August is traditionally observed as the month of devotion to the Immaculate Heart of Mary,
+            inviting the faithful to renew their consecration to her Heart throughout these summer weeks.
+          </p>
+          <p className={styles.augustText}>
+            <strong>Origins:</strong> Pope Pius XII established a specific feast day for the Immaculate
+            Heart on August 22 in 1944 to pray for peace during World War II — the date chosen as the
+            octave of the Assumption, crowning Mary&apos;s queenship with devotion to her Heart. The
+            liturgical feast was later moved, in the calendar reforms following the Second Vatican
+            Council, to the Saturday after the Sacred Heart in June. August, however, remains dedicated
+            in custom and popular devotion to honoring the Immaculate Heart of Mary.
+          </p>
+        </div>
+      </div>
+
       {/* INTRO */}
       <div className="content-block" style={{ maxWidth: '860px' }}>
         <h2>A Heart Without Sin</h2>
