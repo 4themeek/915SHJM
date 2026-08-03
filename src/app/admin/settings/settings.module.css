@@ -32,6 +32,60 @@
   line-height: 1.6;
 }
 
+/* MAINTENANCE MODE */
+.maintenanceRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.statusOn {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: var(--crimson);
+}
+
+.statusOff {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: #16a34a;
+}
+
+.maintenanceOnBtn {
+  background: var(--crimson);
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1.5rem;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.maintenanceOnBtn:hover:not(:disabled) { background: var(--crimson-light); }
+.maintenanceOnBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.maintenanceOffBtn {
+  background: var(--navy);
+  color: var(--gold);
+  border: none;
+  padding: 0.65rem 1.5rem;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.maintenanceOffBtn:hover:not(:disabled) { background: var(--navy-dark); }
+.maintenanceOffBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
 /* FREE SHIPPING */
 .thresholdRow {
   display: flex;

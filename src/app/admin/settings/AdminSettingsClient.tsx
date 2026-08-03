@@ -11,14 +11,17 @@ interface Props {
   freeShippingThreshold: string;
   promoCodes: PromoCode[];
   adminEmail: string;
+  maintenanceMode: boolean;
 }
 
-export default function AdminSettingsClient({ freeShippingThreshold, promoCodes: initialCodes, adminEmail }: Props) {
+export default function AdminSettingsClient({ freeShippingThreshold, promoCodes: initialCodes, adminEmail, maintenanceMode }: Props) {
   const router = useRouter();
   const [threshold, setThreshold] = useState(freeShippingThreshold);
   const [savingThreshold, setSavingThreshold] = useState(false);
   const [thresholdMsg, setThresholdMsg] = useState('');
   const [promoCodes, setPromoCodes] = useState(initialCodes);
+  const [maintenanceOn, setMaintenanceOn] = useState(maintenanceMode);
+  const [savingMaintenance, setSavingMaintenance] = useState(false);
 
   // New promo code form
   const [newCode, setNewCode] = useState({ code: '', type: 'percent', value: '', min_order: '', expires_at: '', max_uses: '' });
@@ -29,6 +32,30 @@ export default function AdminSettingsClient({ freeShippingThreshold, promoCodes:
   async function handleLogout() {
     await fetch('/api/admin/logout', { method: 'POST' });
     router.push('/admin');
+  }
+
+  async function toggleMaintenance() {
+    const turningOn = !maintenanceOn;
+    if (turningOn && !window.confirm(
+      'This will replace the entire public site with an "Under Construction" page for all visitors. The admin panel stays accessible so you can turn it back off. Continue?'
+    )) {
+      return;
+    }
+    setSavingMaintenance(true);
+    try {
+      const res = await fetch('/api/admin/maintenance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: turningOn }),
+      });
+      const data = await res.json();
+      if (data.success) setMaintenanceOn(data.enabled);
+      else alert('Error: ' + data.error);
+    } catch {
+      alert('Network error — please try again.');
+    } finally {
+      setSavingMaintenance(false);
+    }
   }
 
   async function saveThreshold() {
@@ -104,6 +131,32 @@ export default function AdminSettingsClient({ freeShippingThreshold, promoCodes:
 
       <div className={styles.dashBody}>
         <h1 className={settingsStyles.pageTitle}>⚙ Store Settings</h1>
+
+        {/* MAINTENANCE MODE */}
+        <div className={settingsStyles.section}>
+          <h2 className={settingsStyles.sectionTitle}>🚧 Under Construction Mode</h2>
+          <p className={settingsStyles.sectionDesc}>
+            When on, every visitor sees an "Under Construction" page instead of the site — useful while
+            you're making changes. This admin panel stays accessible either way, so you can always turn it
+            back off.
+          </p>
+          <div className={settingsStyles.maintenanceRow}>
+            <span className={
+              maintenanceOn ? settingsStyles.statusOn : settingsStyles.statusOff
+            }>
+              ● {maintenanceOn ? 'Site is UNDER CONSTRUCTION' : 'Site is LIVE'}
+            </span>
+            <button
+              className={maintenanceOn ? settingsStyles.maintenanceOffBtn : settingsStyles.maintenanceOnBtn}
+              onClick={toggleMaintenance}
+              disabled={savingMaintenance}
+            >
+              {savingMaintenance
+                ? 'Saving…'
+                : maintenanceOn ? 'Turn OFF — Go Live' : 'Turn ON Under Construction'}
+            </button>
+          </div>
+        </div>
 
         {/* FREE SHIPPING THRESHOLD */}
         <div className={settingsStyles.section}>

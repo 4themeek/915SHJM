@@ -14,10 +14,12 @@ export default async function AdminSettingsPage() {
 
   const threshold = await getSetting('free_shipping_threshold') || '50';
   const promoCodes = await getAllPromoCodes();
+  const maintenanceMode = (await getSetting('maintenance_mode')) === 'true';
 
   return <AdminSettingsClient
     freeShippingThreshold={threshold}
     promoCodes={promoCodes}
     adminEmail={session}
+    maintenanceMode={maintenanceMode}
   />;
 }
