@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import { getAllProducts, createProductsTable, runMigrations } from '@/lib/db';
+import { getAllProducts, createProductsTable, runMigrations, getSetting } from '@/lib/db';
 import { PRODUCTS, CATEGORIES } from '@/lib/products';
 import ShopClient from './ShopClient';
+import styles from './shop.module.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 export default async function ShopPage() {
   let products: any[] = [];
   let categories: string[] = [];
+  const shopMaintenance = (await getSetting('shop_maintenance_mode')) === 'true';
 
   try {
     await createProductsTable();
@@ -56,6 +58,16 @@ export default async function ShopPage() {
         <h1>Our Collection</h1>
         <p>High-quality prints and plaques of the Sacred Hearts</p>
       </div>
+      {shopMaintenance && (
+        <div className={styles.maintenanceBanner}>
+          <p className={styles.maintenanceBannerTitle}>✦ Shop Under Construction ✦</p>
+          <p className={styles.maintenanceBannerText}>
+            We're making some updates and aren't able to take orders online right now. Browse our
+            full catalog below for reference, and call <a href="tel:5137413400">(513) 741-3400</a> (M&ndash;F
+            11am&ndash;4pm EST) to place an order in the meantime.
+          </p>
+        </div>
+      )}
       <ShopClient products={products} categories={categories} />
     </>
   );

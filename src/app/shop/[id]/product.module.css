@@ -145,6 +145,20 @@
   color: var(--gold);
 }
 
+.shopUnavailable {
+  width: 100%;
+  padding: 1rem 2rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-style: italic;
+  text-align: center;
+  color: var(--muted);
+  background: var(--cream-dark);
+  border: 1px solid var(--border);
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+}
+
 .btnNav:hover {
   background: var(--navy-dark);
 }

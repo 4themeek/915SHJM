@@ -18,6 +18,7 @@ interface CartContextType {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
+  shopMaintenance: boolean;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -41,7 +42,7 @@ function saveCart(cart: CartItem[]) {
   } catch {}
 }
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({ children, shopMaintenance = false }: { children: React.ReactNode; shopMaintenance?: boolean }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -94,6 +95,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       cartCount, cartTotal, isOpen,
       openCart: () => setIsOpen(true),
       closeCart: () => setIsOpen(false),
+      shopMaintenance,
     }}>
       {children}
     </CartContext.Provider>

@@ -37,7 +37,7 @@ export default function AdminSettingsClient({ freeShippingThreshold, promoCodes:
   async function toggleMaintenance() {
     const turningOn = !maintenanceOn;
     if (turningOn && !window.confirm(
-      'This will replace the entire public site with an "Under Construction" page for all visitors. The admin panel stays accessible so you can turn it back off. Continue?'
+      'This will disable Add to Cart everywhere and show a read-only catalog on the Shop pages for all visitors. The rest of the site stays live. Continue?'
     )) {
       return;
     }
@@ -134,17 +134,18 @@ export default function AdminSettingsClient({ freeShippingThreshold, promoCodes:
 
         {/* MAINTENANCE MODE */}
         <div className={settingsStyles.section}>
-          <h2 className={settingsStyles.sectionTitle}>🚧 Under Construction Mode</h2>
+          <h2 className={settingsStyles.sectionTitle}>🚧 Shop Under Construction</h2>
           <p className={settingsStyles.sectionDesc}>
-            When on, every visitor sees an "Under Construction" page instead of the site — useful while
-            you're making changes. This admin panel stays accessible either way, so you can always turn it
-            back off.
+            When on, the Shop pages show a read-only catalog (pictures + prices, no Add to Cart) and the
+            cart icon disappears site-wide — visitors are directed to call instead. The rest of the site
+            (About, Promises, Donate, Contact, etc.) stays fully live and unaffected. This admin panel is
+            always accessible either way.
           </p>
           <div className={settingsStyles.maintenanceRow}>
             <span className={
               maintenanceOn ? settingsStyles.statusOn : settingsStyles.statusOff
             }>
-              ● {maintenanceOn ? 'Site is UNDER CONSTRUCTION' : 'Site is LIVE'}
+              ● {maintenanceOn ? 'Shop is UNDER CONSTRUCTION' : 'Shop is LIVE'}
             </span>
             <button
               className={maintenanceOn ? settingsStyles.maintenanceOffBtn : settingsStyles.maintenanceOnBtn}

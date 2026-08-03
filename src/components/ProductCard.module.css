@@ -95,7 +95,8 @@
 
 .btnAdd,
 .btnDisabled,
-.btnNav {
+.btnNav,
+.unavailableNote {
   width: 100%;
   padding: 0.65rem;
   font-family: var(--font-display);
@@ -106,6 +107,13 @@
   display: block;
   transition: background 0.2s;
   border: none;
+}
+
+.unavailableNote {
+  background: var(--cream-dark);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  box-sizing: border-box;
 }
 
 .btnAdd {

@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   try {
     const { enabled } = await req.json();
     await createSettingsTable();
-    await setSetting('maintenance_mode', enabled ? 'true' : 'false');
+    await setSetting('shop_maintenance_mode', enabled ? 'true' : 'false');
     return NextResponse.json({ success: true, enabled: Boolean(enabled) });
   } catch (error) {
     return NextResponse.json({ error: 'Database error: ' + String(error) }, { status: 500 });

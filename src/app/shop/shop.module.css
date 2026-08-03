@@ -1,3 +1,35 @@
+.maintenanceBanner {
+  background: linear-gradient(135deg, var(--navy-dark) 0%, var(--crimson-dark) 100%);
+  border-top: 2px solid var(--gold);
+  border-bottom: 2px solid var(--gold);
+  padding: 2rem;
+  text-align: center;
+}
+
+.maintenanceBannerTitle {
+  font-family: var(--font-display);
+  color: var(--gold);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+}
+
+.maintenanceBannerText {
+  font-family: var(--font-body);
+  color: var(--parchment);
+  font-size: 1.05rem;
+  font-style: italic;
+  line-height: 1.7;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.maintenanceBannerText a {
+  color: var(--gold);
+  font-style: normal;
+  font-weight: 500;
+}
+
 .filterBar {
   display: flex;
   flex-wrap: wrap;

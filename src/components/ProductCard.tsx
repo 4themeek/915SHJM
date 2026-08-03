@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function ProductCard({ product }: Props) {
-  const { addToCart, openCart } = useCart();
+  const { addToCart, openCart, shopMaintenance } = useCart();
 
   function handleAdd(e: React.MouseEvent) {
     e.preventDefault();
@@ -55,7 +55,9 @@ export default function ProductCard({ product }: Props) {
         ) : (
           <p className={styles.price}>{product.price}</p>
         )}
-        {product.outOfStock ? (
+        {shopMaintenance ? (
+          <p className={styles.unavailableNote}>Shop Under Construction</p>
+        ) : product.outOfStock ? (
           <button className={styles.btnDisabled} disabled>Out of Stock</button>
         ) : product.isFree ? (
           <Link href="/contact" className={styles.btnNav}>Contact Us</Link>

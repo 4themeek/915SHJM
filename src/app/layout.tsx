@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
 import Toast from '@/components/Toast';
+import { getSetting } from '@/lib/db';
 
 export const metadata: Metadata = {
   title: {
@@ -39,11 +40,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const shopMaintenance = (await getSetting('shop_maintenance_mode')) === 'true';
+
   return (
     <html lang="en">
       <body>
-        <CartProvider>
+        <CartProvider shopMaintenance={shopMaintenance}>
           <Navbar />
           <main>{children}</main>
           <Footer />

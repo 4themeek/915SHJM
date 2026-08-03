@@ -6,7 +6,7 @@ import { useCart } from '@/lib/cart-context';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
-  const { cartCount, openCart } = useCart();
+  const { cartCount, openCart, shopMaintenance } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
 
   function toggleMenu() {
@@ -44,16 +44,20 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <button className={styles.cartBtn} onClick={openCart} aria-label="Open cart">
-              Cart ({cartCount})
-            </button>
+            {!shopMaintenance && (
+              <button className={styles.cartBtn} onClick={openCart} aria-label="Open cart">
+                Cart ({cartCount})
+              </button>
+            )}
           </div>
 
           {/* MOBILE RIGHT — cart + hamburger */}
           <div className={styles.mobileRight}>
-            <button className={styles.cartBtnMobile} onClick={openCart} aria-label="Open cart">
-              Cart ({cartCount})
-            </button>
+            {!shopMaintenance && (
+              <button className={styles.cartBtnMobile} onClick={openCart} aria-label="Open cart">
+                Cart ({cartCount})
+              </button>
+            )}
             <button
               className={styles.hamburger}
               onClick={toggleMenu}
@@ -90,12 +94,14 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <button
-            className={styles.mobileCartBtn}
-            onClick={() => { closeMenu(); openCart(); }}
-          >
-            Cart ({cartCount})
-          </button>
+          {!shopMaintenance && (
+            <button
+              className={styles.mobileCartBtn}
+              onClick={() => { closeMenu(); openCart(); }}
+            >
+              Cart ({cartCount})
+            </button>
+          )}
         </div>
       </div>
     </>

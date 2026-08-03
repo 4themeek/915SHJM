@@ -6,7 +6,7 @@ import { useState } from 'react';
 import styles from './product.module.css';
 
 export default function AddToCartButton({ product }: { product: Product }) {
-  const { addToCart, openCart } = useCart();
+  const { addToCart, openCart, shopMaintenance } = useCart();
   const [added, setAdded] = useState(false);
 
   function handle() {
@@ -14,6 +14,10 @@ export default function AddToCartButton({ product }: { product: Product }) {
     openCart();
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+  }
+
+  if (shopMaintenance) {
+    return <p className={styles.shopUnavailable}>Shop Under Construction — please call to order.</p>;
   }
 
   return (
