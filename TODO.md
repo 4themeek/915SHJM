@@ -13,7 +13,7 @@ Actionable, outstanding items only. For full context, architecture, and "why" on
 
 ## Future feature ideas
 
-- [ ] **Homepage opening intro.** Some kind of "movie-like" opening slides/animated intro on the homepage before the normal content loads. Specifics not yet fleshed out (e.g. a slideshow of product/devotional images, a brief animated sequence, whether it shows every visit or just first-time visitors) — needs a proper discussion of scope and design before building.
+- [ ] **Homepage background slideshow.** Full-page cinematic background with a slow zoom/fade between 7 images (`slide-01.jpg` through `slide-07.jpg`, 1920×1080px, to be uploaded). Build as a React component (not a video file) so text/buttons can overlay on top. Slow crossfade transition with a gentle Ken Burns zoom effect on each image. Sits behind all page content as a fixed layer. *(Brought over from notes in an earlier session — this replaces the earlier vague "opening intro" placeholder with the real spec.)*
 
 ## Bugs / technical debt
 
