@@ -20,12 +20,6 @@ export default function GivePage() {
           priority
           className={styles.logo}
         />
-        <h1 className={styles.heading}>✦ Support Our Ministry</h1>
-        <p className={styles.sub}>
-          Thank you for taking home a sacred image from our hall table today. Please make
-          a donation to support our ministry, choose a preset general amount or enter your
-          custom total amount below.
-        </p>
         <GiveClient />
       </div>
     </div>

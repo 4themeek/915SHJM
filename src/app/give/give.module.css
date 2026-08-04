@@ -21,6 +21,33 @@
   display: block;
 }
 
+.langToggle {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.langBtn {
+  background: var(--cream);
+  border: 1px solid var(--border);
+  padding: 0.45rem 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.langBtn:hover,
+.langBtn.active {
+  border-color: var(--gold);
+  background: var(--cream-dark);
+  color: var(--navy);
+}
+
 .heading {
   font-family: var(--font-display);
   font-size: 1.3rem;
