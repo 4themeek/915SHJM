@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PRODUCTS, FEATURED_IDS } from '@/lib/products';
-import { getAllProducts, createProductsTable, runMigrations } from '@/lib/db';
+import { getAllProducts, createProductsTable, runMigrations, getSetting } from '@/lib/db';
 import ProductCard from '@/components/ProductCard';
 import styles from './page.module.css';
 
@@ -14,14 +14,18 @@ export const metadata: Metadata = {
     'Spread God\'s love with images of the Sacred Heart of Jesus and Immaculate Heart of Mary. High-quality prints and plaques from our 501(c)3 ministry in Cincinnati, Ohio.',
 };
 
-const INFO_CARDS = [
-  { icon: '✦', title: 'Free Shipping', desc: 'Orders over $50 qualify to ship free within the United States' },
-  { icon: '✝', title: 'Tax-Deductible', desc: '501(c)3 nonprofit donations' },
-  { icon: '♥', title: 'Reduced Rates', desc: 'Financial assistance available — just contact us' },
-  { icon: '☎', title: 'Personal Service - Call Us!', desc: 'Mon–Fri 10–5 EST · 513.741.3400' },
-];
+function buildInfoCards(freeShippingThreshold: string) {
+  return [
+    { icon: '✦', title: 'Free Shipping', desc: `Orders over $${freeShippingThreshold} qualify to ship free within the United States` },
+    { icon: '✝', title: 'Tax-Deductible', desc: '501(c)3 nonprofit donations' },
+    { icon: '♥', title: 'Reduced Rates', desc: 'Financial assistance available — just contact us' },
+    { icon: '☎', title: 'Personal Service - Call Us!', desc: 'Mon–Fri 10–5 EST · 513.741.3400' },
+  ];
+}
 
 export default async function HomePage() {
+  const freeShippingThreshold = (await getSetting('free_shipping_threshold')) || '50';
+  const INFO_CARDS = buildInfoCards(freeShippingThreshold);
   let featured: any[] = [];
   try {
     await createProductsTable();
