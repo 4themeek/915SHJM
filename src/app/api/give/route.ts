@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
         price_data: {
           currency: 'usd',
           product_data: {
-            name: 'Donation — The Sacred Hearts Ministry',
-            description: 'Tax-deductible donation made in person at a Sacred Hearts table. Cincinnati OH 501(c)3.',
+            name: 'Table Donation — The Sacred Hearts Ministry',
+            description: 'Table Donation — tax-deductible gift made in person at a Sacred Hearts hall table. Cincinnati OH 501(c)3.',
           },
           unit_amount: Math.round(amount * 100),
         },

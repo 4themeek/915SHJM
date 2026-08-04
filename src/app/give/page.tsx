@@ -22,8 +22,9 @@ export default function GivePage() {
         />
         <h1 className={styles.heading}>✦ Support Our Ministry</h1>
         <p className={styles.sub}>
-          Thank you for taking home a sacred image today. If you&apos;d like to make a
-          donation to support our ministry, please choose or enter an amount below.
+          Thank you for taking home a sacred image from our hall table today. Please make
+          a donation to support our ministry, choose a preset general amount or enter your
+          custom total amount below.
         </p>
         <GiveClient />
       </div>

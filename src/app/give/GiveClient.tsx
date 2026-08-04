@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import styles from './give.module.css';
 
-const PRESET_AMOUNTS = [10, 20, 50, 100];
+const PRESET_AMOUNTS = [10, 25, 50];
 
 export default function GiveClient() {
-  const [selected, setSelected] = useState<number | null>(20);
+  const [selected, setSelected] = useState<number | null>(25);
   const [custom, setCustom] = useState('');
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
@@ -64,10 +64,10 @@ export default function GiveClient() {
           </button>
         ))}
         <button
-          className={`${styles.amtCard} ${isCustom ? styles.active : ''}`}
+          className={`${styles.amtCard} ${styles.customBtn} ${isCustom ? styles.active : ''}`}
           onClick={selectCustom}
         >
-          Custom
+          Enter $ Total of Items
         </button>
       </div>
 
