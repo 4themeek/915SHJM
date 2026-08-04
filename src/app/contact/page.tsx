@@ -29,7 +29,15 @@ export default function ContactPage() {
               {[
                 { label: 'Address', value: '5440 Moeller Avenue, Suite 101\nCincinnati, OH 45212' },
                 { label: 'Phone', value: '513.741.3400', href: 'tel:5137413400' },
-                { label: 'Hours', value: 'Monday – Friday\n10am – 5pm EST' },
+                {
+                  label: 'Hours',
+                  value: (
+                    <>
+                      Monday – Friday<br />
+                      <span style={{ fontSize: '1.5em' }}>10</span>am – <span style={{ fontSize: '1.5em' }}>5</span>pm EST
+                    </>
+                  ),
+                },
               ].map((item) => (
                 <div key={item.label} style={{ marginBottom: '1.25rem' }}>
                   <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.68rem', letterSpacing: '0.1em', color: 'var(--gold-dark)', marginBottom: '0.3rem', textTransform: 'uppercase' }}>
