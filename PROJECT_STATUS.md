@@ -1,6 +1,6 @@
 # Sacred Hearts (915SHJM) — Project Status
 
-**Last updated:** August 4, 2026 (free shipping stuck-state fix)
+**Last updated:** August 4, 2026 (standalone /give table-donation page)
 **Repo:** github.com/4themeek/915SHJM (main branch, auto-deploys to Vercel)
 **Live site:** https://www.thesacredhearts.org
 **Stack:** Next.js 15, @vercel/postgres (Neon-backed), Stripe, Shippo, Vercel Blob (unused/private — see below)
@@ -213,6 +213,19 @@ Verified after the fix, live:
 - A plain $30 non-sale cart → correctly shows a real shipping charge, never free.
 
 **Bonus fix, found while testing:** accepting the suggested address correction (`acceptCorrection()` in `CheckoutClient.tsx`) updated the address but never advanced to the next step, unlike declining it (`keepOriginalAddress()`) — the customer had to click "Continue to Shipping" a second time. Now both paths advance consistently.
+
+---
+
+## 12. Standalone `/give` page — table-donation QR checkout
+
+New need: at physical events/tables where sacred images are picked up in person, there's no card reader — visitors scan a QR code to make a donation on their phone instead. This needed a page that's genuinely disconnected from the main site (no nav, no footer, no cart, not discoverable), while still living on the same domain and matching the site's visual identity.
+
+**How it's built:**
+- `src/app/give/page.tsx` + `GiveClient.tsx` — preset amounts ($10/$20/$50/$100) plus a custom field, "Donate $X Securely" button. No shipping, no cart, no product selection — just an amount and a Stripe redirect.
+- `src/app/give/success/page.tsx` — dedicated thank-you page, styled the same way, no links back into the site.
+- `src/app/api/give/route.ts` — its **own** Stripe Checkout session route, deliberately not sharing code with `/api/donate`, so future edits to the main donate flow can't accidentally affect the table-donation flow (or vice versa). Tags `metadata.type: 'table_donation'` so these are distinguishable from regular purchases/donations in `/admin/orders` (the Stripe webhook already saves every completed session as an order regardless of type, so table donations show up there automatically).
+- **How it's kept "not part of the site":** Next.js's root layout (`src/app/layout.tsx`) wraps every route in `Navbar`, `Footer`, and `CartDrawer` — there's no way to opt a single route out of that at the layout level without restructuring the whole app into route groups (a bigger, riskier change). Instead, `Navbar.tsx`, `Footer.tsx` (converted to a client component for this), and `CartDrawer.tsx` each check `usePathname()` and render `null` when the path starts with `/give`. The CSS variables and fonts from `globals.css` still apply globally, so the page matches the site's color scheme without needing any of the site's nav chrome. `robots: { index: false, follow: false }` on both `/give` and `/give/success` keeps them out of search results too, and nothing links to them from anywhere in the site — reachable only via the QR code's direct URL.
+- Verified live: no server errors, `/give` renders with zero nav/footer/cart elements in the DOM, the rest of the site (checked via homepage) still renders them normally, preset/custom amount selection works, and the checkout POST reaches Stripe (only fails locally due to the same sandboxed-API-key limitation hit throughout this project).
 
 ---
 
