@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import styles from './faq.module.css';
 
-interface FAQ { q: string; a: string; }
+interface FAQ { q: string; a: React.ReactNode; }
 
 export default function FAQClient({ faqs }: { faqs: FAQ[] }) {
   const [open, setOpen] = useState<number | null>(null);
@@ -16,7 +16,7 @@ export default function FAQClient({ faqs }: { faqs: FAQ[] }) {
             <span>{f.q}</span>
             <span className={styles.toggle}>{open === i ? '−' : '+'}</span>
           </div>
-          {open === i && <p className={styles.answer}>{f.a}</p>}
+          {open === i && <p className={styles.answer} onClick={e => e.stopPropagation()}>{f.a}</p>}
         </div>
       ))}
     </div>
