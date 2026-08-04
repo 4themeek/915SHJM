@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         currency: 'usd',
         product_data: {
           name: item.name,
-          ...(item.img ? { images: [item.img] } : {}),
+          ...(item.img ? { images: [item.img.startsWith('http') ? item.img : `${siteUrl}${item.img}`] } : {}),
           description: item.desc ? String(item.desc).substring(0, 200) : undefined,
         },
         unit_amount: Math.round((item.startPrice || item.start_price || 0) * 100),
