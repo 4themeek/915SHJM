@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createContactMessagesTable, createContactMessage } from '@/lib/db';
 import { sendContactNotificationEmail } from '@/lib/email';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+  const allowed = await checkRateLimit(`contact:${getClientIp(req)}`, 5, 600);
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many messages sent. Please try again in a few minutes.' }, { status: 429 });
+  }
+
   try {
     const { name, email, phone, message } = await req.json();
 

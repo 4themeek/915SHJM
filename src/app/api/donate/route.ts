@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+  const allowed = await checkRateLimit(`donate:${getClientIp(req)}`, 10, 600);
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests. Please try again in a few minutes.' }, { status: 429 });
+  }
+
   try {
     const { amount } = await req.json();
 

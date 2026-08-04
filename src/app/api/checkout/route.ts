@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createPromoCodesTable, validatePromoCode, getSetting, getProductById } from '@/lib/db';
 import { getShippingRates } from '@/lib/shippo';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+  const allowed = await checkRateLimit(`checkout:${getClientIp(req)}`, 10, 600);
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests. Please try again in a few minutes.' }, { status: 429 });
+  }
+
   try {
     const { items, shippingRate, customerAddress, promoCode } = await req.json();
 
