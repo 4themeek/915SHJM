@@ -74,9 +74,14 @@ export default function CartDrawer() {
           <div className={styles.footer}>
             {freeShippingThreshold > 0 && (
               <p className={styles.shippingProgress}>
-                {amountToFreeShipping > 0
-                  ? `Add $${amountToFreeShipping.toFixed(2)} more to qualify for free shipping (orders over $${freeShippingThreshold.toFixed(2).replace(/\.00$/, '')})`
-                  : '✦ Your order qualifies for free shipping!'}
+                {amountToFreeShipping > 0 ? (
+                  <>
+                    Add ${amountToFreeShipping.toFixed(2)} more to qualify for free shipping<br />
+                    (orders over ${freeShippingThreshold.toFixed(2).replace(/\.00$/, '')})
+                  </>
+                ) : (
+                  '✦ Your order qualifies for free shipping!'
+                )}
               </p>
             )}
             <div className={styles.total}>
