@@ -65,7 +65,7 @@ export default function CheckoutClient() {
   const [showCorrectionPrompt, setShowCorrectionPrompt] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [promoCode, setPromoCode] = useState('');
-  const [promoApplied, setPromoApplied] = useState<{code: string; type: string; value: number} | null>(null);
+  const [promoApplied, setPromoApplied] = useState<{code: string; type: string; value: number; appliesToShipping: boolean} | null>(null);
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(50);
@@ -82,15 +82,18 @@ export default function CheckoutClient() {
   }, 0);
 
   const allFreeShipping = cart.every(item => item.sale);
-  const promoDiscount = promoApplied
-    ? promoApplied.type === 'percent'
-      ? cartTotal * (promoApplied.value / 100)
-      : Math.min(promoApplied.value, cartTotal)
-    : 0;
 
   const shippingAmount = selectedRate?.amount || 0;
   const qualifiesForFreeShipping = freeShippingThreshold > 0 && cartTotal >= freeShippingThreshold;
   const effectiveShipping = qualifiesForFreeShipping ? 0 : shippingAmount;
+
+  const promoDiscountBase = promoApplied?.appliesToShipping ? cartTotal + effectiveShipping : cartTotal;
+  const promoDiscount = promoApplied
+    ? promoApplied.type === 'percent'
+      ? promoDiscountBase * (promoApplied.value / 100)
+      : Math.min(promoApplied.value, promoDiscountBase)
+    : 0;
+
   const orderTotal = cartTotal - promoDiscount + effectiveShipping;
 
   function updateAddress(field: keyof Address, value: string) {
@@ -205,7 +208,7 @@ export default function CheckoutClient() {
       });
       const data = await res.json();
       if (data.valid && data.promo) {
-        setPromoApplied({ code: data.promo.code, type: data.promo.type, value: Number(data.promo.value) });
+        setPromoApplied({ code: data.promo.code, type: data.promo.type, value: Number(data.promo.value), appliesToShipping: Boolean(data.promo.applies_to_shipping) });
         setPromoError('');
       } else {
         setPromoError(data.error || 'Invalid promo code');

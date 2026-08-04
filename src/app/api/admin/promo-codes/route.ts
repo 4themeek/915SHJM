@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
       expires_at: data.expires_at || null,
       active: true,
       max_uses: data.max_uses ? parseInt(data.max_uses) : null,
+      applies_to_shipping: Boolean(data.applies_to_shipping),
     });
     return NextResponse.json({ code });
   } catch (error) {

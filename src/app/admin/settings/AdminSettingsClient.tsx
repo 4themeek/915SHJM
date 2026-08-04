@@ -24,7 +24,7 @@ export default function AdminSettingsClient({ freeShippingThreshold, promoCodes:
   const [savingMaintenance, setSavingMaintenance] = useState(false);
 
   // New promo code form
-  const [newCode, setNewCode] = useState({ code: '', type: 'percent', value: '', min_order: '', expires_at: '', max_uses: '' });
+  const [newCode, setNewCode] = useState({ code: '', type: 'percent', value: '', min_order: '', expires_at: '', max_uses: '', applies_to_shipping: false });
   const [savingPromo, setSavingPromo] = useState(false);
   const [promoMsg, setPromoMsg] = useState('');
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -87,7 +87,7 @@ export default function AdminSettingsClient({ freeShippingThreshold, promoCodes:
       const data = await res.json();
       if (data.code) {
         setPromoCodes(prev => [data.code, ...prev]);
-        setNewCode({ code: '', type: 'percent', value: '', min_order: '', expires_at: '', max_uses: '' });
+        setNewCode({ code: '', type: 'percent', value: '', min_order: '', expires_at: '', max_uses: '', applies_to_shipping: false });
         setPromoMsg('✦ Promo code created');
       } else {
         setPromoMsg('❌ Error: ' + data.error);
@@ -112,7 +112,8 @@ export default function AdminSettingsClient({ freeShippingThreshold, promoCodes:
   }
 
   function discountDisplay(p: PromoCode) {
-    return p.type === 'percent' ? `${p.value}% off` : `$${Number(p.value).toFixed(2)} off`;
+    const base = p.type === 'percent' ? `${p.value}% off` : `$${Number(p.value).toFixed(2)} off`;
+    return p.applies_to_shipping ? `${base} (+ shipping)` : base;
   }
 
   return (
@@ -232,6 +233,14 @@ export default function AdminSettingsClient({ freeShippingThreshold, promoCodes:
                   value={newCode.max_uses} onChange={e => setNewCode(p => ({ ...p, max_uses: e.target.value }))} />
               </div>
             </div>
+            <label className={styles.toggle} style={{ marginBottom: '1.25rem' }}>
+              <input
+                type="checkbox"
+                checked={newCode.applies_to_shipping}
+                onChange={e => setNewCode(p => ({ ...p, applies_to_shipping: e.target.checked }))}
+              />
+              <span className={styles.toggleLabel}>Also apply this discount to shipping cost</span>
+            </label>
             <button className={settingsStyles.createBtn} onClick={savePromoCode} disabled={savingPromo || !newCode.code || !newCode.value}>
               {savingPromo ? 'Creating…' : '✦ Create Promo Code'}
             </button>

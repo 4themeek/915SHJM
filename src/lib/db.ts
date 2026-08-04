@@ -228,9 +228,12 @@ export async function createPromoCodesTable() {
       active BOOLEAN NOT NULL DEFAULT true,
       uses INTEGER NOT NULL DEFAULT 0,
       max_uses INTEGER DEFAULT NULL,
+      applies_to_shipping BOOLEAN NOT NULL DEFAULT false,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+  // Migrate existing tables that predate this column
+  await sql`ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS applies_to_shipping BOOLEAN NOT NULL DEFAULT false`;
 }
 
 export interface PromoCode {
@@ -243,6 +246,7 @@ export interface PromoCode {
   active: boolean;
   uses: number;
   max_uses: number | null;
+  applies_to_shipping: boolean;
   created_at: string;
 }
 
@@ -280,9 +284,9 @@ export async function incrementPromoUses(code: string): Promise<void> {
 
 export async function createPromoCode(data: Omit<PromoCode, 'id' | 'uses' | 'created_at'>): Promise<PromoCode> {
   const { rows } = await sql<PromoCode>`
-    INSERT INTO promo_codes (code, type, value, min_order, expires_at, active, max_uses)
+    INSERT INTO promo_codes (code, type, value, min_order, expires_at, active, max_uses, applies_to_shipping)
     VALUES (UPPER(${data.code}), ${data.type}, ${data.value}, ${data.min_order ?? null},
-            ${data.expires_at ?? null}, ${data.active}, ${data.max_uses ?? null})
+            ${data.expires_at ?? null}, ${data.active}, ${data.max_uses ?? null}, ${data.applies_to_shipping ?? false})
     RETURNING *
   `;
   return rows[0];

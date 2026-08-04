@@ -38,12 +38,14 @@ export async function POST(req: NextRequest) {
       quantity: item.qty || 1,
     }));
 
-    // Product subtotal only (matches what the promo discount is applied against
-    // on the client) — shipping is priced separately below and never discounted.
+    // Product subtotal only — shipping is priced separately below. Whether a
+    // promo discount also reaches shipping depends on that code's own
+    // applies_to_shipping flag, applied below.
     const subtotal = items.reduce(
       (sum: number, item: any) => sum + (item.startPrice || item.start_price || 0) * (item.qty || 1),
       0
     );
+    const shippingAmount = shippingRate && shippingRate.amount > 0 ? Number(shippingRate.amount) : 0;
 
     // Add shipping as line item if applicable
     if (shippingRate && shippingRate.amount > 0) {
@@ -77,15 +79,23 @@ export async function POST(req: NextRequest) {
       }
 
       const promo = result.promo;
+      // Discount base: product subtotal only, or product + shipping if this
+      // code is flagged to reach shipping too.
+      const discountBase = promo.applies_to_shipping ? subtotal + shippingAmount : subtotal;
       const discountAmount = promo.type === 'percent'
-        ? subtotal * (Number(promo.value) / 100)
-        : Math.min(Number(promo.value), subtotal);
+        ? discountBase * (Number(promo.value) / 100)
+        : Math.min(Number(promo.value), discountBase);
 
-      const coupon = await stripe.coupons.create(
-        promo.type === 'percent'
-          ? { percent_off: Number(promo.value), duration: 'once', name: `Promo: ${promo.code}` }
-          : { amount_off: Math.round(discountAmount * 100), currency: 'usd', duration: 'once', name: `Promo: ${promo.code}` }
-      );
+      // Always create a fixed amount_off coupon (never percent_off) — Stripe's
+      // percent_off applies against the *entire* session total regardless of
+      // scoping intent, so computing the exact dollar amount ourselves is the
+      // only way to correctly honor applies_to_shipping for percent codes too.
+      const coupon = await stripe.coupons.create({
+        amount_off: Math.round(discountAmount * 100),
+        currency: 'usd',
+        duration: 'once',
+        name: `Promo: ${promo.code}`,
+      });
 
       discounts = [{ coupon: coupon.id }];
       appliedPromoCode = promo.code;
