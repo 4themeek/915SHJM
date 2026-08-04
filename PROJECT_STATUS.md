@@ -1,6 +1,6 @@
 # Sacred Hearts (915SHJM) — Project Status
 
-**Last updated:** August 4, 2026 (contact form + admin messages inbox)
+**Last updated:** August 4, 2026 (product page CSS fix)
 **Repo:** github.com/4themeek/915SHJM (main branch, auto-deploys to Vercel)
 **Live site:** https://www.thesacredhearts.org
 **Stack:** Next.js 15, @vercel/postgres (Neon-backed), Stripe, Shippo, Vercel Blob (unused/private — see below)
@@ -184,6 +184,16 @@ User reported the donate button also showed "Something went wrong" — turned ou
 - New admin page at `/admin/messages` (`MessagesClient.tsx`, mirrors the `OrdersClient.tsx` table pattern) lists all submissions with Mark Read/Unread and Delete, plus a total/unread count. Reachable via a "✉ Messages" button added to the Dashboard, Orders, and Settings admin nav headers.
 
 `RESEND_API_KEY` remains set in Vercel but unused — Brevo was the better choice since it's already proven working in this codebase.
+
+---
+
+## 10. Product detail page — fixed broken CSS, still has low-res source images
+
+User reported the product image on a shop product page looked "oversized and fuzzy" after clicking a new FAQ link to it. Investigation found two separate issues:
+
+**Fixed — broken CSS (sitewide, not just this one product):** [`product.module.css`](src/app/shop/[id]/product.module.css) was missing every class [`shop/[id]/page.tsx`](src/app/shop/[id]/page.tsx) actually references — `.imageWrap`, `.productPage`, `.category`, `.productName`, `.saleBadge`, `.oosBadge`, `.noImage`, `.freeNote`, `.contactBtn`, `.addToCartBtn`, `.metaInfo`, `.relatedTitle` — the CSS file only had older, differently-named classes (`.imgWrap`, `.detail`, `.cat`, `.name`...) left over from an earlier version, never updated when the component was rewritten. Without `.imageWrap`'s `position: relative`, the `<Image fill>` had no positioned container to size against, so it rendered unconstrained — that's what looked "oversized." Added the missing classes, matched to the site's existing badge/button visual language from `ProductCard.module.css`. This affected **every** product detail page, confirmed via browser testing across a sale item, a free/contact-us item (Parish Display), and the Enthronement Booklet.
+
+**Not fixed — still a known gap:** 29 of the 37 product images are only 300×300px source files (recovered from an old WordPress backup during an earlier session's image-recovery work — see section 2). These will still look soft at normal display sizes even with the layout bug fixed, since that's a source-resolution ceiling, not something CSS can solve. Only 8 products (e.g. Sacred Heart Badges, at 1200×1200) have proper high-res sources. Flagged to the user, not yet acted on — would need better original photos sourced for the other 29.
 
 ---
 
