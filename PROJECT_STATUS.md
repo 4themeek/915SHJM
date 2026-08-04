@@ -1,6 +1,6 @@
 # Sacred Hearts (915SHJM) — Project Status
 
-**Last updated:** August 4, 2026 (product page CSS fix)
+**Last updated:** August 4, 2026 (free shipping stuck-state fix)
 **Repo:** github.com/4themeek/915SHJM (main branch, auto-deploys to Vercel)
 **Live site:** https://www.thesacredhearts.org
 **Stack:** Next.js 15, @vercel/postgres (Neon-backed), Stripe, Shippo, Vercel Blob (unused/private — see below)
@@ -194,6 +194,25 @@ User reported the product image on a shop product page looked "oversized and fuz
 **Fixed — broken CSS (sitewide, not just this one product):** [`product.module.css`](src/app/shop/[id]/product.module.css) was missing every class [`shop/[id]/page.tsx`](src/app/shop/[id]/page.tsx) actually references — `.imageWrap`, `.productPage`, `.category`, `.productName`, `.saleBadge`, `.oosBadge`, `.noImage`, `.freeNote`, `.contactBtn`, `.addToCartBtn`, `.metaInfo`, `.relatedTitle` — the CSS file only had older, differently-named classes (`.imgWrap`, `.detail`, `.cat`, `.name`...) left over from an earlier version, never updated when the component was rewritten. Without `.imageWrap`'s `position: relative`, the `<Image fill>` had no positioned container to size against, so it rendered unconstrained — that's what looked "oversized." Added the missing classes, matched to the site's existing badge/button visual language from `ProductCard.module.css`. This affected **every** product detail page, confirmed via browser testing across a sale item, a free/contact-us item (Parish Display), and the Enthronement Booklet.
 
 **Not fixed — still a known gap:** 29 of the 37 product images are only 300×300px source files (recovered from an old WordPress backup during an earlier session's image-recovery work — see section 2). These will still look soft at normal display sizes even with the layout bug fixed, since that's a source-resolution ceiling, not something CSS can solve. Only 8 products (e.g. Sacred Heart Badges, at 1200×1200) have proper high-res sources. Flagged to the user, not yet acted on — would need better original photos sourced for the other 29.
+
+---
+
+## 11. Free shipping getting stuck after removing cart items — FIXED
+
+**The bug:** user reported building a cart up past the $55 free-shipping threshold (shipping correctly showed "Free"), then removing a couple items to drop the total back under $50 — but "Free" stayed stuck instead of reverting to a real shipping charge.
+
+**Root cause, confirmed by direct reproduction:** the site has *two independent* free-shipping mechanisms — the dollar threshold, and a separate "all cart items are on sale → free shipping" perk. Since nearly every product in the shop carries a Sale badge, the sale-items perk is what's actually active for most typical carts, not the dollar threshold. `/api/shipping-rates` returned this as a synthetic `{id: 'free', amount: 0}` rate, prepended to the list and auto-selected by default (`CheckoutClient.tsx` always selects `rates[0]`). Once selected, that `$0` was baked into `selectedRate` — a piece of state with **no connection to cart total at all**. Removing items correctly flipped `qualifiesForFreeShipping` (the dollar-threshold check) back to `false`, but that didn't matter, because `shippingAmount` was already hardcoded to `0` from the selected rate itself, independent of that flag.
+
+Reproduced live in the browser: a $60 cart of on-sale items auto-selected the synthetic "Standard — Free Shipping" $0 option; removing one item dropped the total to $30, and Shipping stayed "Free" in both the Review totals and the sidebar.
+
+**Fixed:** removed the synthetic `$0` rate from `/api/shipping-rates` entirely — it now only ever returns real Shippo carrier rates. The customer always selects a real, non-zero rate, and "free" is computed fresh on every render as `(dollar threshold met) OR (all items on sale)` — the exact same reactive pattern that was already working correctly for the dollar threshold in isolation, so the class of bug is now structurally impossible (there's no code path left where `shippingAmount` can be a hardcoded zero). `/api/checkout`'s server-side hardening was simplified to match — it always matches the claimed rate against a fresh Shippo quote now, instead of special-casing a `'free'` rate id.
+
+Verified after the fix, live:
+- All-sale cart over threshold → correctly shows Free (real rate, $0 via the qualification calc).
+- Removing an item down to $30, with the remaining item still on sale → correctly *still* shows Free (legitimately qualifies via the sale-items perk — not a bug).
+- A plain $30 non-sale cart → correctly shows a real shipping charge, never free.
+
+**Bonus fix, found while testing:** accepting the suggested address correction (`acceptCorrection()` in `CheckoutClient.tsx`) updated the address but never advanced to the next step, unlike declining it (`keepOriginalAddress()`) — the customer had to click "Continue to Shipping" a second time. Now both paths advance consistently.
 
 ---
 
