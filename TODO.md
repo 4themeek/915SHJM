@@ -40,5 +40,14 @@ Actionable, outstanding items only. For full context, architecture, and "why" on
 - [ ] **Double-dollar-sign price bug.** At least "Sacred Heart of Jesus – Classic Plaques (Spanish)" shows `$$ 3.00` instead of `$3.00` in its price display — check that product's `price` field in the admin panel.
 - [ ] **Remove leftover debug logging.** `console.log` calls dumping full product payloads on every save, in `src/app/admin/ProductForm.tsx` and `src/app/api/admin/products/[id]/route.ts`.
 - [ ] **`runMigrations()` runs on every product save.** Two `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` statements in the products PUT route — harmless (idempotent) but only ever needs to run once, not every save.
-- [ ] **Upgrade `next@15.3.6`.** Known high-severity security vulnerability per `npm install`'s own warning.
-- [ ] **Audit git history for anything sensitive.** No `.gitignore` existed in this repo until this project — worth a check that nothing large or sensitive got committed before it did.
+- [ ] **Upgrade `next@15.3.6`.** Known high-severity security vulnerability per `npm install`'s own warning. (Dependabot security updates, once enabled below, would auto-PR this.)
+- [ ] **Audit git history for anything sensitive.** No `.gitignore` existed in this repo until this project — worth a check that nothing large or sensitive got committed before it did. GitHub's secret-scanning historical scan (below) will help surface this once enabled — if it finds anything, the fix is to rotate that key immediately (Stripe/Brevo/Shippo dashboards), not just remove the commit, since the repo is public.
+
+## GitHub repository security (public repo — 4themeek/915SHJM)
+
+- [x] **Branch ruleset for `main` — DONE.** Imported via Settings → Rules → Rulesets: blocks branch deletion and force-pushes. Deliberately does **not** require PR review or status checks, since the user is the sole committer pushing directly to `main` — adding those later would need a bypass-actor exemption for the repo owner first, or it would lock out direct pushes entirely.
+- [ ] **Enable Secret scanning** (Settings → Security). Detects committed API keys (Stripe, Brevo, Shippo) automatically; runs a historical scan on activation too.
+- [ ] **Enable Push protection for secrets** (Settings → Security). Blocks a push *before* a secret lands in history at all — the more important of the two given how many live API keys this project handles.
+- [ ] **Confirm Dependabot alerts are on** (Settings → Security). Usually default for public repos, worth verifying.
+- [ ] **Enable Dependabot security updates** (Settings → Security). Auto-opens PRs for vulnerable dependencies — directly closes the `next@15.3.6` CVE item above once merged.
+- [ ] **Enable Code scanning — CodeQL default setup** (Settings → Security). Free for public repos; static analysis for real vulnerability classes (injection, XSS) on every push/PR.
