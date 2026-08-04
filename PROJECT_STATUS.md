@@ -1,6 +1,6 @@
 # Sacred Hearts (915SHJM) — Project Status
 
-**Last updated:** August 3, 2026 (shipping hardening + donate fix)
+**Last updated:** August 4, 2026 (contact form + admin messages inbox)
 **Repo:** github.com/4themeek/915SHJM (main branch, auto-deploys to Vercel)
 **Live site:** https://www.thesacredhearts.org
 **Stack:** Next.js 15, @vercel/postgres (Neon-backed), Stripe, Shippo, Vercel Blob (unused/private — see below)
@@ -62,7 +62,6 @@ All images live at `public/images/products/product-{id}.{ext}` as local static f
 
 ## 3. Known bugs / technical debt (not yet fixed, spotted along the way)
 
-- **Contact form doesn't actually send anything.** [`ContactForm.tsx`](src/app/contact/ContactForm.tsx) shows a fake "Sending…" spinner and then "Message Sent!" — `handleSubmit` has a `// TODO: connect to email service` and just fakes success after a `setTimeout`. Visitors believe their message reached the business; it goes nowhere. Worth fixing soon — `RESEND_API_KEY` is already set in Vercel but nothing in the codebase calls it, so it may have been intended for exactly this and never finished.
 - **Vercel Blob store is misconfigured for the admin upload feature.** The connected Blob store (`sacred-hearts-images`, `store_6nL0qIEiAuCuSSwV`) is set to **Private** access, but [`/api/admin/upload/route.ts`](src/app/api/admin/upload/route.ts) calls `put(..., { access: 'public' })`. If anyone uses the "upload image" button in the admin product form right now, it will fail. Either switch the store to public access in the Vercel dashboard, or rework the upload flow to use signed URLs for private blobs (bigger change). Given the images work fine now as static files under `public/images/`, you may not need Blob storage at all going forward.
 - **Double-dollar-sign price bug:** at least one product ("Sacred Heart of Jesus – Classic Plaques (Spanish)") shows `$$ 3.00` instead of `$3.00` in its `price` display string — likely a data-entry artifact from the bulk price-edit session. Not investigated further; worth a quick look at that product's `price` field in the admin panel.
 - **Debug logging left in:** [ProductForm.tsx](src/app/admin/ProductForm.tsx) and [products/[id]/route.ts](src/app/api/admin/products/[id]/route.ts) have leftover `console.log` calls dumping full product payloads on every save. Harmless but noisy in Vercel logs.
@@ -170,6 +169,21 @@ Same never-trust-the-client principle already applied to promo codes: `/api/chec
 ### Donate page redirect bug
 
 User reported the donate button also showed "Something went wrong" — turned out `DonateClient.tsx` had never been updated when the same `redirectToCheckout` → `session.url` fix was applied to checkout earlier in this session. Fixed identically (`src/app/api/donate/route.ts` now returns `url: session.url`; `DonateClient.tsx` uses `window.location.href = url`).
+
+---
+
+## 9. Contact form — FIXED, now saves + emails + logs in admin
+
+**The bug:** [`ContactForm.tsx`](src/app/contact/ContactForm.tsx) had no `name` attributes on its inputs and no real submit logic — `handleSubmit` just showed a fake "Sending…" spinner, then "Message Sent!" after a `setTimeout`, with nothing captured or sent anywhere.
+
+**Fixed:**
+- Form is now fully controlled (`useState`), validates required fields client-side, and POSTs to a new `/api/contact` route.
+- `/api/contact` validates again server-side, saves the message to a new `contact_messages` table (`src/lib/db.ts`), then emails a notification via **Brevo** — the same provider already confirmed working for admin magic-link logins (`sendMagicLinkEmail` in `src/lib/auth.ts`), factored into a new shared sender in `src/lib/email.ts`. No new env var needed; reuses `BREVO_API_KEY`.
+- Notification email goes to **4thesacredhearts@gmail.com**, with `Reply-To` set to the sender's own email so replying goes straight to them.
+- If the email send fails for any reason, the message is still saved — nothing is lost, it's just visible in the admin panel instead of an inbox.
+- New admin page at `/admin/messages` (`MessagesClient.tsx`, mirrors the `OrdersClient.tsx` table pattern) lists all submissions with Mark Read/Unread and Delete, plus a total/unread count. Reachable via a "✉ Messages" button added to the Dashboard, Orders, and Settings admin nav headers.
+
+`RESEND_API_KEY` remains set in Vercel but unused — Brevo was the better choice since it's already proven working in this codebase.
 
 ---
 

@@ -29,7 +29,7 @@ Actionable, outstanding items only. For full context, architecture, and "why" on
 
 ## Bugs / technical debt
 
-- [ ] **Contact form doesn't send anything.** `src/app/contact/ContactForm.tsx` fakes a "Message Sent!" success after a timeout — nothing is actually emailed anywhere. `RESEND_API_KEY` is already set in Vercel but nothing in the codebase calls it.
+- [x] **Contact form — DONE.** Was faking a "Message Sent!" success after a timeout with no real inputs. Now saves to a `contact_messages` table, emails a notification to 4thesacredhearts@gmail.com via Brevo (Reply-To set to the sender), and lists submissions at `/admin/messages` (mark read/unread, delete) — reachable via a "✉ Messages" button in the admin nav. `RESEND_API_KEY` is still unused/set in Vercel but no longer needed for this.
 - [ ] **Vercel Blob store is Private, but the upload code requests public access.** `src/app/api/admin/upload/route.ts` calls `put(..., { access: 'public' })` against a store configured as Private — the admin panel's "upload image" button will fail if anyone uses it. Either switch the store to public access, or rework the upload flow for signed URLs.
 - [ ] **Double-dollar-sign price bug.** At least "Sacred Heart of Jesus – Classic Plaques (Spanish)" shows `$$ 3.00` instead of `$3.00` in its price display — check that product's `price` field in the admin panel.
 - [ ] **Remove leftover debug logging.** `console.log` calls dumping full product payloads on every save, in `src/app/admin/ProductForm.tsx` and `src/app/api/admin/products/[id]/route.ts`.
