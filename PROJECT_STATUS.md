@@ -118,6 +118,24 @@ Admin-togglable mode that shows a read-only product catalog on the Shop pages an
 
 ---
 
+## 8. Stripe checkout investigation — fixes shipped, needs live test
+
+**The bug:** clicking pay creates a Stripe Checkout Session successfully (confirmed via Vercel logs), but Stripe's own hosted checkout page then shows a generic "Something went wrong. You might be having a network connection problem, the link might be expired, or the payment provider cannot be reached." Reported via notes brought over from a separate session, which had already ruled out: empty `NEXT_PUBLIC_SITE_URL` (fixed, confirmed currently correct with no trailing slash), Stripe keys being live/matching, account restrictions, and browser-specific issues (fails identically in Firefox and Edge).
+
+**Two fixes landed this session** (from two parallel sessions working on this — one pushed directly to GitHub mid-session, requiring a merge):
+- **Product images passed to Stripe as unqualified relative paths.** `/api/checkout/route.ts` was passing `item.img` straight through to Stripe's `product_data.images`. Since this session's earlier work moved most product images to local relative paths (`/images/products/product-{id}.jpg`), those were reaching Stripe as invalid non-absolute URLs. Now converts to absolute (`item.img.startsWith('http') ? item.img : \`${siteUrl}${item.img}\``) before sending. **This is the strongest candidate for the actual root cause** — a malformed image URL wouldn't necessarily fail session *creation*, but could plausibly break rendering on Stripe's *hosted* page, matching the symptom exactly.
+- **Switched the client-side redirect** from `stripe.redirectToCheckout({ sessionId })` (Stripe.js's older helper, requiring `@stripe/stripe-js` loaded client-side) to returning `session.url` from the server and doing `window.location.href = url` directly — Stripe's current recommended pattern, and removes one client-side round-trip to Stripe before the customer reaches the hosted page. Lower confidence this was the cause, but a genuine simplification regardless. `CheckoutClient.tsx` no longer imports `loadStripe`/`@stripe/stripe-js` at all.
+
+**Not yet done — needs a real checkout test** to confirm these actually fixed it. If it still fails:
+- Check Stripe Workbench → **Logs** (not Events) for the real current `success_url`/`cancel_url` on a fresh attempt.
+- Test from a different network (e.g. phone on cellular data) to rule out a router/firewall/ad-blocker blocking Stripe's fraud-detection domain (`m.stripe.network`) — this fits the "fails identically in two different browsers" symptom better than a code bug would, since a network-level block would affect both browsers identically while a code bug already should have too, but this is the one hypothesis that was never actually tested.
+
+**Also added:** `allow_promotion_codes: true` on the Checkout Session — Stripe's hosted page now shows its own promo code field automatically.
+
+**Also discovered (not removed, needs a decision):** the site already has a *separate, custom-built* promo-code system — its own `promo_codes` Postgres table, an admin UI at `/admin/settings`, and `/api/validate-promo`. The checkout page's UI never had an actual input field wired in to use it (the state/logic exists in `CheckoutClient.tsx` but nothing renders it), and even if it had, `/api/checkout` never read the resulting `promoCode`/`promoDiscount` from the request — so the discount would never have actually reduced what Stripe charges. Two non-overlapping, non-functional promo systems existed side by side. Now that Stripe-native codes work, this custom system is redundant unless there's a reason to keep it (e.g. wanting codes manageable from this site's own admin panel instead of the Stripe Dashboard) — see TODO.md.
+
+---
+
 ## Quick reference
 
 - **Admin panel:** `/admin` (magic-link email login, `ADMIN_EMAIL` env var controls who can log in)
