@@ -2,12 +2,9 @@
 
 import { useState, useCallback } from 'react';
 import { useCart } from '@/lib/cart-context';
-import { loadStripe } from '@stripe/stripe-js';
 import { PRODUCT_WEIGHTS } from '@/lib/products';
 import Link from 'next/link';
 import styles from './checkout.module.css';
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
 interface Address {
   name: string;
@@ -233,11 +230,12 @@ export default function CheckoutClient() {
           promoDiscount: promoDiscount,
         }),
       });
-      const { sessionId, error } = await res.json();
+      const { url, error } = await res.json();
       if (error) throw new Error(error);
-      const stripe = await stripePromise;
-      if (stripe && sessionId) {
-        await stripe.redirectToCheckout({ sessionId });
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL returned. Please try again.');
       }
     } catch (err: any) {
       alert('Checkout error: ' + (err.message || 'Please try again.'));

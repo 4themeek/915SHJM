@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
       success_url: `${siteUrl}/order-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/checkout`,
       billing_address_collection: 'auto',
+      allow_promotion_codes: true,
       metadata: {
         source: 'sacred-hearts-website',
         shippo_rate_id: shippingRate?.id || 'free',
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ sessionId: session.id });
+    return NextResponse.json({ sessionId: session.id, url: session.url });
 
   } catch (error: any) {
     console.error('Stripe checkout error:', error?.message || error);
