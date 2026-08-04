@@ -14,6 +14,7 @@ Actionable, outstanding items only. For full context, architecture, and "why" on
 ## Future feature ideas
 
 - [ ] **Homepage background slideshow.** Full-page cinematic background with a slow zoom/fade between 7 images (`slide-01.jpg` through `slide-07.jpg`, 1920×1080px, to be uploaded). Build as a React component (not a video file) so text/buttons can overlay on top. Slow crossfade transition with a gentle Ken Burns zoom effect on each image. Sits behind all page content as a fixed layer. *(Brought over from notes in an earlier session — this replaces the earlier vague "opening intro" placeholder with the real spec.)*
+- [ ] **Downloadable digital products (PDFs) in the shop.** Add support for products that deliver a PDF download after a successful Stripe checkout instead of (or alongside) physical shipping. Planned approach discussed: extend the `/api/webhooks/stripe` handler (already fires on `checkout.session.completed`, already saves orders) to email the customer a secure, expiring download link via Brevo (already wired up and working), pointing to a protected API route that verifies the Stripe session actually paid before streaming the file. Also show a "Download now" link on the order-success page, gated the same way, for immediate access without waiting on email. Not yet designed in detail (storage location for the PDFs, per-product digital-vs-physical flag, etc.) — discuss further before building.
 
 ## Stripe checkout — needs live verification
 
