@@ -1,30 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const SHIPPO_API_KEY = process.env.SHIPPO_API_KEY || 'shippo_test_dc2753f1272bcb293a8c5285e44346b46a79a665';
-
-const FROM_ADDRESS = {
-  name: 'The Sacred Hearts',
-  street1: '5440 Moeller Avenue',
-  street2: 'Suite 101',
-  city: 'Cincinnati',
-  state: 'OH',
-  zip: '45212',
-  country: 'US',
-  phone: '5137413400',
-  email: 'info@thesacredhearts.org',
-};
-
-async function shippoPost(endpoint: string, body: object) {
-  const res = await fetch(`https://api.goshippo.com/${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `ShippoToken ${SHIPPO_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-  return res.json();
-}
+import { shippoPost, getShippingRates } from '@/lib/shippo';
 
 export async function POST(req: NextRequest) {
   try {
@@ -86,9 +61,8 @@ export async function POST(req: NextRequest) {
     // ── STEP 2: Fetch shipping rates using validated address ──────────
     const addressToUse = correctedAddress || toAddress;
 
-    const shipment = await shippoPost('shipments/', {
-      address_from: FROM_ADDRESS,
-      address_to: {
+    const rates = await getShippingRates(
+      {
         name: toAddress.name || 'Customer',
         street1: addressToUse.street1,
         street2: addressToUse.street2 || '',
@@ -97,30 +71,8 @@ export async function POST(req: NextRequest) {
         zip: addressToUse.zip,
         country: toAddress.country || 'US',
       },
-      parcels: [{
-        length: '12',
-        width: '10',
-        height: '3',
-        distance_unit: 'in',
-        weight: String(Math.max(weightOz, 4)),
-        mass_unit: 'oz',
-      }],
-      async: false,
-    });
-
-    const rates = (shipment.rates || [])
-      .filter((r: any) => r.amount && parseFloat(r.amount) > 0)
-      .map((r: any) => ({
-        id: r.object_id,
-        carrier: r.provider,
-        service: r.servicelevel?.name || r.service_level_name || r.provider,
-        amount: parseFloat(r.amount),
-        amountFormatted: `$${parseFloat(r.amount).toFixed(2)}`,
-        currency: r.currency,
-        estimatedDays: r.estimated_days,
-        duration_terms: r.duration_terms || null,
-      }))
-      .sort((a: any, b: any) => a.amount - b.amount);
+      weightOz
+    );
 
     const freeOption = hasFreeShipping ? [{
       id: 'free',

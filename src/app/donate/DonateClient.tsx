@@ -1,10 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 import styles from './donate.module.css';
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
 const AMOUNTS = [
   { value: 25, label: '$25', desc: 'Provides images for one family' },
@@ -36,13 +33,14 @@ export default function DonateClient() {
         body: JSON.stringify({ amount: finalAmount }),
       });
 
-      const { sessionId, error: apiError } = await res.json();
+      const { url, error: apiError } = await res.json();
 
       if (apiError) throw new Error(apiError);
 
-      const stripe = await stripePromise;
-      if (stripe && sessionId) {
-        await stripe.redirectToCheckout({ sessionId });
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL returned. Please try again.');
       }
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please try again.');

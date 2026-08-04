@@ -85,7 +85,12 @@ export default function CheckoutClient() {
 
   const shippingAmount = selectedRate?.amount || 0;
   const qualifiesForFreeShipping = freeShippingThreshold > 0 && cartTotal >= freeShippingThreshold;
-  const effectiveShipping = qualifiesForFreeShipping ? 0 : shippingAmount;
+  // Free shipping covers only the cheapest available rate — selecting a
+  // pricier method still costs the difference between it and the cheapest.
+  const cheapestRateAmount = rates.length > 0 ? Math.min(...rates.map(r => r.amount)) : 0;
+  const effectiveShipping = qualifiesForFreeShipping
+    ? Math.max(0, shippingAmount - cheapestRateAmount)
+    : shippingAmount;
 
   const promoDiscountBase = promoApplied?.appliesToShipping ? cartTotal + effectiveShipping : cartTotal;
   const promoDiscount = promoApplied
@@ -543,10 +548,15 @@ export default function CheckoutClient() {
                 )}
                 <div className={styles.totalRow}>
                   <span>Shipping ({selectedRate?.service})</span>
-                  <span className={selectedRate?.amount === 0 ? styles.free : ''}>
+                  <span className={effectiveShipping === 0 ? styles.free : ''}>
                     {effectiveShipping === 0 ? 'Free' : `$${effectiveShipping.toFixed(2)}`}
                   </span>
                 </div>
+                {qualifiesForFreeShipping && effectiveShipping > 0 && (
+                  <p style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: '-0.5rem', marginBottom: '0.5rem' }}>
+                    Your order qualifies for free standard shipping — this is the added cost of upgrading to {selectedRate?.service}.
+                  </p>
+                )}
                 <div className={`${styles.totalRow} ${styles.grandTotal}`}>
                   <span>Total</span>
                   <span>from ${orderTotal.toFixed(2)}</span>
@@ -599,7 +609,7 @@ export default function CheckoutClient() {
               )}
               <div className={styles.summaryRow}>
                 <span>Shipping</span>
-                <span>{selectedRate ? (selectedRate.amount === 0 ? 'Free' : `$${selectedRate.amount.toFixed(2)}`) : '—'}</span>
+                <span>{selectedRate ? (effectiveShipping === 0 ? 'Free' : `$${effectiveShipping.toFixed(2)}`) : '—'}</span>
               </div>
               <div className={`${styles.summaryRow} ${styles.summaryGrand}`}>
                 <span>Total</span>
