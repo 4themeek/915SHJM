@@ -466,3 +466,60 @@ export async function saveRefundToOrder(id: number, data: {
   `;
   return rows[0];
 }
+
+// ─────────────────────────────────────────────────────────────
+// CONTACT MESSAGES
+// ─────────────────────────────────────────────────────────────
+
+export interface ContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  message: string;
+  read: boolean;
+  created_at: string;
+}
+
+export async function createContactMessagesTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS contact_messages (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT,
+      message TEXT NOT NULL,
+      read BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+}
+
+export async function createContactMessage(data: {
+  name: string;
+  email: string;
+  phone: string | null;
+  message: string;
+}): Promise<ContactMessage> {
+  const { rows } = await sql<ContactMessage>`
+    INSERT INTO contact_messages (name, email, phone, message)
+    VALUES (${data.name}, ${data.email}, ${data.phone ?? null}, ${data.message})
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function getAllContactMessages(): Promise<ContactMessage[]> {
+  const { rows } = await sql<ContactMessage>`
+    SELECT * FROM contact_messages ORDER BY created_at DESC
+  `;
+  return rows;
+}
+
+export async function markContactMessageRead(id: number, read: boolean): Promise<void> {
+  await sql`UPDATE contact_messages SET read = ${read} WHERE id = ${id}`;
+}
+
+export async function deleteContactMessage(id: number): Promise<void> {
+  await sql`DELETE FROM contact_messages WHERE id = ${id}`;
+}
