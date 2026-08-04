@@ -55,7 +55,7 @@ export default function CartDrawer() {
                 </div>
                 <div className={styles.itemInfo}>
                   <p className={styles.itemName}>{item.name}</p>
-                  <p className={styles.itemPrice}>from ${item.startPrice.toFixed(2)}</p>
+                  <p className={styles.itemPrice}>${item.startPrice.toFixed(2)}</p>
                   <div className={styles.qtyRow}>
                     <button className={styles.qtyBtn} onClick={() => changeQty(item.id, -1)}>−</button>
                     <span className={styles.qty}>{item.qty}</span>
@@ -72,7 +72,7 @@ export default function CartDrawer() {
           <div className={styles.footer}>
             <div className={styles.total}>
               <span>Estimated Total</span>
-              <span>from ${cartTotal.toFixed(2)}</span>
+              <span>${cartTotal.toFixed(2)}</span>
             </div>
             <button className={styles.checkoutBtn} onClick={handleCheckout}>
               Proceed to Checkout

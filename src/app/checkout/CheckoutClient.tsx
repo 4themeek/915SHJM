@@ -502,7 +502,7 @@ export default function CheckoutClient() {
                       <p className={styles.reviewItemName}>{item.name}</p>
                       <p className={styles.reviewItemQty}>Qty: {item.qty}</p>
                     </div>
-                    <p className={styles.reviewItemPrice}>from ${(item.startPrice * item.qty).toFixed(2)}</p>
+                    <p className={styles.reviewItemPrice}>${(item.startPrice * item.qty).toFixed(2)}</p>
                   </div>
                 ))}
               </div>
@@ -538,7 +538,7 @@ export default function CheckoutClient() {
               <div className={styles.totals}>
                 <div className={styles.totalRow}>
                   <span>Subtotal</span>
-                  <span>from ${cartTotal.toFixed(2)}</span>
+                  <span>${cartTotal.toFixed(2)}</span>
                 </div>
                 {promoApplied && (
                   <div className={styles.totalRow}>
@@ -559,7 +559,7 @@ export default function CheckoutClient() {
                 )}
                 <div className={`${styles.totalRow} ${styles.grandTotal}`}>
                   <span>Total</span>
-                  <span>from ${orderTotal.toFixed(2)}</span>
+                  <span>${orderTotal.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -592,14 +592,14 @@ export default function CheckoutClient() {
                     <p className={styles.summaryItemName}>{item.name}</p>
                     <p className={styles.summaryItemCat}>{item.cat}</p>
                   </div>
-                  <p className={styles.summaryItemPrice}>from ${(item.startPrice * item.qty).toFixed(2)}</p>
+                  <p className={styles.summaryItemPrice}>${(item.startPrice * item.qty).toFixed(2)}</p>
                 </div>
               ))}
             </div>
             <div className={styles.summaryTotals}>
               <div className={styles.summaryRow}>
                 <span>Subtotal</span>
-                <span>from ${cartTotal.toFixed(2)}</span>
+                <span>${cartTotal.toFixed(2)}</span>
               </div>
               {promoApplied && (
                 <div className={styles.summaryRow}>
@@ -613,7 +613,7 @@ export default function CheckoutClient() {
               </div>
               <div className={`${styles.summaryRow} ${styles.summaryGrand}`}>
                 <span>Total</span>
-                <span>from ${orderTotal.toFixed(2)}</span>
+                <span>${orderTotal.toFixed(2)}</span>
               </div>
             </div>
             <p className={styles.summaryTax}>501(c)3 nonprofit · Every purchase is tax-deductible</p>
