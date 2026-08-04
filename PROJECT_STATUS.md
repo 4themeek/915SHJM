@@ -1,6 +1,6 @@
 # Sacred Hearts (915SHJM) — Project Status
 
-**Last updated:** August 3, 2026
+**Last updated:** August 3, 2026 (shipping hardening + donate fix)
 **Repo:** github.com/4themeek/915SHJM (main branch, auto-deploys to Vercel)
 **Live site:** https://www.thesacredhearts.org
 **Stack:** Next.js 15, @vercel/postgres (Neon-backed), Stripe, Shippo, Vercel Blob (unused/private — see below)
@@ -148,6 +148,28 @@ Added `applies_to_shipping BOOLEAN` to `promo_codes`, selectable per-code via a 
 **Bug found and fixed while building this:** percent-type codes were using Stripe's native `percent_off`, which applies against the *entire* session total (product + shipping) regardless of scoping intent — so percent codes were secretly already reaching shipping while fixed-dollar codes weren't, an inconsistency between the two types that existed before this fix. Both types now compute the exact dollar discount server-side (based on product subtotal, or product+shipping if the flag is set) and apply it via a single `amount_off` coupon — consistent behavior for both discount types.
 
 **Not yet tested live** — see TODO.md.
+
+### Free-shipping display and scope bugs
+
+User reported the sidebar Order Summary still showed a shipping charge even after the $50 free-shipping threshold had zeroed it out elsewhere on the page. Cause: the sidebar checked `selectedRate.amount === 0` (the raw rate's own price) instead of `effectiveShipping === 0` (the post-discount amount), unlike the main Review column which already used the right variable. Fixed to use `effectiveShipping` in both places.
+
+While discussing this, user asked whether free shipping could be restricted to a single carrier service ("UPS Ground Saver only"). Rather than hardcode one carrier (fragile if rates/providers change), the agreed fix: **only the cheapest available rate at checkout time is free** — `effectiveShipping = Math.max(0, selectedRateAmount - cheapestRateAmount)`. Selecting a pricier expedited option still charges the difference. This also closed a cost-exposure gap where hitting the threshold had been zeroing out *any* selected rate, including expensive ones.
+
+### Shipping cost hardened server-side
+
+Same never-trust-the-client principle already applied to promo codes: `/api/checkout` was accepting `shippingRate.amount` from the client with no independent check, mirroring the promo-code trust gap fixed earlier. At the user's request ("harden it now"), fixed:
+
+- Extracted the Shippo rate-fetching logic (previously only in `/api/shipping-rates`) into a shared `src/lib/shippo.ts` module, `getShippingRates()`.
+- `/api/checkout` now calls `getShippingRates()` itself for the customer's address and re-derives the price from that fresh quote, instead of trusting the client's number.
+- The client's claimed carrier+service is matched against the fresh rate list; if nothing matches (stale quote or tampering), the request is rejected with a "please re-select shipping" error rather than silently guessing.
+- The "all cart items are on sale → free shipping" perk (a separate mechanism from the $50 threshold) was also being trusted from the client — now independently re-checked against each item's real `sale`/`sale_ends_at` status in the database.
+- The cheapest-rate-only free-shipping-threshold cap (above) is now computed from the DB `free_shipping_threshold` setting and the fresh rate list, not client-supplied numbers.
+
+**Not yet closed:** product line-item prices (`item.startPrice`) sent to `/api/checkout` are still trusted from the client, not re-validated against the DB — a similar, currently larger, tampering vector than shipping was. Noted in TODO.md, not yet requested by the user.
+
+### Donate page redirect bug
+
+User reported the donate button also showed "Something went wrong" — turned out `DonateClient.tsx` had never been updated when the same `redirectToCheckout` → `session.url` fix was applied to checkout earlier in this session. Fixed identically (`src/app/api/donate/route.ts` now returns `url: session.url`; `DonateClient.tsx` uses `window.location.href = url`).
 
 ---
 
