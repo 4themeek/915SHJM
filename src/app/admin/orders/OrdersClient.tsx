@@ -113,7 +113,14 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
                     {order.shipping_street1}<br />
                     {order.shipping_city}, {order.shipping_state} {order.shipping_zip}
                   </td>
-                  <td>${Number(order.amount_total).toFixed(2)}</td>
+                  <td>
+                    ${Number(order.amount_total).toFixed(2)}
+                    {order.promo_code && (
+                      <><br /><span style={{ fontSize: '0.75rem', color: 'var(--gold-dark)' }}>
+                        {order.promo_code} (−${Number(order.promo_discount).toFixed(2)})
+                      </span></>
+                    )}
+                  </td>
                   <td>{order.status}</td>
                   <td>
                     {order.label_url ? (

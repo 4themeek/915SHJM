@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createOrdersTable, orderExistsBySessionId, createOrder } from '@/lib/db';
+import { createOrdersTable, orderExistsBySessionId, createOrder, incrementPromoUses } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -60,7 +60,13 @@ export async function POST(req: NextRequest) {
         quantity: li.quantity,
         amount_total: (li.amount_total || 0) / 100,
       })),
+      promo_code: meta.promo_code || null,
+      promo_discount: meta.promo_discount ? Number(meta.promo_discount) : null,
     });
+
+    if (meta.promo_code) {
+      await incrementPromoUses(meta.promo_code);
+    }
   }
 
   return NextResponse.json({ received: true });

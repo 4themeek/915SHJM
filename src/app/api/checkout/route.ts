@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { createPromoCodesTable, validatePromoCode } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   try {
-    const { items, shippingRate, customerAddress } = await req.json();
+    const { items, shippingRate, customerAddress, promoCode } = await req.json();
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: 'No items in cart' }, { status: 400 });
@@ -37,6 +38,13 @@ export async function POST(req: NextRequest) {
       quantity: item.qty || 1,
     }));
 
+    // Product subtotal only (matches what the promo discount is applied against
+    // on the client) — shipping is priced separately below and never discounted.
+    const subtotal = items.reduce(
+      (sum: number, item: any) => sum + (item.startPrice || item.start_price || 0) * (item.qty || 1),
+      0
+    );
+
     // Add shipping as line item if applicable
     if (shippingRate && shippingRate.amount > 0) {
       line_items.push({
@@ -51,6 +59,39 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Re-validate the promo code server-side — never trust a discount amount
+    // supplied by the client. Applied as a one-time Stripe coupon so the
+    // discount is baked into the actual amount Stripe charges.
+    let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
+    let appliedPromoCode: string | null = null;
+    let appliedPromoDiscount: number | null = null;
+
+    if (promoCode) {
+      await createPromoCodesTable();
+      const result = await validatePromoCode(String(promoCode), subtotal);
+      if (!result.valid || !result.promo) {
+        return NextResponse.json(
+          { error: result.error || 'This promo code is no longer valid.' },
+          { status: 400 }
+        );
+      }
+
+      const promo = result.promo;
+      const discountAmount = promo.type === 'percent'
+        ? subtotal * (Number(promo.value) / 100)
+        : Math.min(Number(promo.value), subtotal);
+
+      const coupon = await stripe.coupons.create(
+        promo.type === 'percent'
+          ? { percent_off: Number(promo.value), duration: 'once', name: `Promo: ${promo.code}` }
+          : { amount_off: Math.round(discountAmount * 100), currency: 'usd', duration: 'once', name: `Promo: ${promo.code}` }
+      );
+
+      discounts = [{ coupon: coupon.id }];
+      appliedPromoCode = promo.code;
+      appliedPromoDiscount = discountAmount;
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items,
@@ -58,7 +99,7 @@ export async function POST(req: NextRequest) {
       success_url: `${siteUrl}/order-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/checkout`,
       billing_address_collection: 'auto',
-      allow_promotion_codes: true,
+      ...(discounts ? { discounts } : {}),
       metadata: {
         source: 'sacred-hearts-website',
         shippo_rate_id: shippingRate?.id || 'free',
@@ -72,6 +113,7 @@ export async function POST(req: NextRequest) {
         weight_oz: String(
           items.reduce((sum: number, item: any) => sum + ((item.weight_oz || 8) * (item.qty || 1)), 0)
         ),
+        ...(appliedPromoCode ? { promo_code: appliedPromoCode, promo_discount: String(appliedPromoDiscount) } : {}),
       },
     });
 

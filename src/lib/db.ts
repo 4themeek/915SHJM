@@ -326,6 +326,8 @@ export interface DbOrder {
   status: string;
   refund_request_id: string | null;
   refund_status: string | null;
+  promo_code: string | null;
+  promo_discount: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -358,10 +360,15 @@ export async function createOrdersTable() {
       status TEXT NOT NULL DEFAULT 'paid',
       refund_request_id TEXT,
       refund_status TEXT,
+      promo_code TEXT,
+      promo_discount NUMERIC(10,2),
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+  // Migrate existing tables that predate these columns
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_code TEXT`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_discount NUMERIC(10,2)`;
 }
 
 export async function orderExistsBySessionId(sessionId: string): Promise<boolean> {
@@ -386,19 +393,22 @@ export async function createOrder(data: {
   weight_oz: number;
   shippo_rate_id: string | null;
   line_items: any;
+  promo_code?: string | null;
+  promo_discount?: number | null;
 }): Promise<DbOrder> {
   const { rows } = await sql<DbOrder>`
     INSERT INTO orders (
       stripe_session_id, stripe_payment_intent, customer_email, customer_name,
       amount_total, currency, shipping_name, shipping_street1, shipping_street2,
       shipping_city, shipping_state, shipping_zip, shipping_country, weight_oz,
-      shippo_rate_id, line_items, status
+      shippo_rate_id, line_items, status, promo_code, promo_discount
     )
     VALUES (
       ${data.stripe_session_id}, ${data.stripe_payment_intent}, ${data.customer_email}, ${data.customer_name},
       ${data.amount_total}, ${data.currency}, ${data.shipping_name}, ${data.shipping_street1}, ${data.shipping_street2},
       ${data.shipping_city}, ${data.shipping_state}, ${data.shipping_zip}, ${data.shipping_country}, ${data.weight_oz},
-      ${data.shippo_rate_id}, ${JSON.stringify(data.line_items)}::jsonb, 'paid'
+      ${data.shippo_rate_id}, ${JSON.stringify(data.line_items)}::jsonb, 'paid',
+      ${data.promo_code ?? null}, ${data.promo_discount ?? null}
     )
     RETURNING *
   `;

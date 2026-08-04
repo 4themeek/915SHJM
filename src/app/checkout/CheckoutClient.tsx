@@ -215,6 +215,12 @@ export default function CheckoutClient() {
     finally { setPromoLoading(false); }
   }
 
+  function removePromoCode() {
+    setPromoApplied(null);
+    setPromoCode('');
+    setPromoError('');
+  }
+
   async function handleCheckout() {
     if (!selectedRate) return;
     setProcessing(true);
@@ -227,7 +233,6 @@ export default function CheckoutClient() {
           shippingRate: { ...selectedRate, amount: effectiveShipping },
           customerAddress: address,
           promoCode: promoApplied?.code || null,
-          promoDiscount: promoDiscount,
         }),
       });
       const { url, error } = await res.json();
@@ -494,11 +499,45 @@ export default function CheckoutClient() {
                 ))}
               </div>
 
+              <div className={styles.promoBox}>
+                {promoApplied ? (
+                  <div className={styles.promoApplied}>
+                    <span>✦ Code <strong>{promoApplied.code}</strong> applied</span>
+                    <button type="button" className={styles.promoRemoveBtn} onClick={removePromoCode}>Remove</button>
+                  </div>
+                ) : (
+                  <div className={styles.promoRow}>
+                    <input
+                      type="text"
+                      className={styles.promoInput}
+                      placeholder="Promo code"
+                      value={promoCode}
+                      onChange={e => { setPromoCode(e.target.value); setPromoError(''); }}
+                    />
+                    <button
+                      type="button"
+                      className={styles.promoApplyBtn}
+                      onClick={applyPromoCode}
+                      disabled={promoLoading || !promoCode.trim()}
+                    >
+                      {promoLoading ? 'Checking…' : 'Apply'}
+                    </button>
+                  </div>
+                )}
+                {promoError && <p className={styles.promoErrorText}>{promoError}</p>}
+              </div>
+
               <div className={styles.totals}>
                 <div className={styles.totalRow}>
                   <span>Subtotal</span>
                   <span>from ${cartTotal.toFixed(2)}</span>
                 </div>
+                {promoApplied && (
+                  <div className={styles.totalRow}>
+                    <span>Promo ({promoApplied.code})</span>
+                    <span className={styles.free}>−${promoDiscount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className={styles.totalRow}>
                   <span>Shipping ({selectedRate?.service})</span>
                   <span className={selectedRate?.amount === 0 ? styles.free : ''}>
@@ -549,6 +588,12 @@ export default function CheckoutClient() {
                 <span>Subtotal</span>
                 <span>from ${cartTotal.toFixed(2)}</span>
               </div>
+              {promoApplied && (
+                <div className={styles.summaryRow}>
+                  <span>Promo ({promoApplied.code})</span>
+                  <span>−${promoDiscount.toFixed(2)}</span>
+                </div>
+              )}
               <div className={styles.summaryRow}>
                 <span>Shipping</span>
                 <span>{selectedRate ? (selectedRate.amount === 0 ? 'Free' : `$${selectedRate.amount.toFixed(2)}`) : '—'}</span>
