@@ -167,6 +167,15 @@
   flex-shrink: 0;
 }
 
+.shippingProgress {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
 .total {
   display: flex;
   justify-content: space-between;

@@ -42,11 +42,12 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const shopMaintenance = (await getSetting('shop_maintenance_mode')) === 'true';
+  const freeShippingThreshold = parseFloat((await getSetting('free_shipping_threshold')) || '50');
 
   return (
     <html lang="en">
       <body>
-        <CartProvider shopMaintenance={shopMaintenance}>
+        <CartProvider shopMaintenance={shopMaintenance} freeShippingThreshold={freeShippingThreshold}>
           <Navbar />
           <main>{children}</main>
           <Footer />

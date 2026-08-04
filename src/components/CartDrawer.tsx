@@ -6,8 +6,10 @@ import { useCart } from '@/lib/cart-context';
 import styles from './CartDrawer.module.css';
 
 export default function CartDrawer() {
-  const { cart, isOpen, closeCart, changeQty, removeFromCart, cartTotal } = useCart();
+  const { cart, isOpen, closeCart, changeQty, removeFromCart, cartTotal, freeShippingThreshold } = useCart();
   const router = useRouter();
+
+  const amountToFreeShipping = freeShippingThreshold - cartTotal;
 
   function handleCheckout() {
     closeCart();
@@ -70,6 +72,13 @@ export default function CartDrawer() {
 
         {cart.length > 0 && (
           <div className={styles.footer}>
+            {freeShippingThreshold > 0 && (
+              <p className={styles.shippingProgress}>
+                {amountToFreeShipping > 0
+                  ? `Add $${amountToFreeShipping.toFixed(2)} more to qualify for free shipping (orders over $${freeShippingThreshold.toFixed(2).replace(/\.00$/, '')})`
+                  : '✦ Your order qualifies for free shipping!'}
+              </p>
+            )}
             <div className={styles.total}>
               <span>Estimated Total</span>
               <span>${cartTotal.toFixed(2)}</span>
