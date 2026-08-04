@@ -28,7 +28,6 @@ export default function ContactPage() {
             <div style={{ marginTop: '2rem' }}>
               {[
                 { label: 'Address', value: '5440 Moeller Avenue, Suite 101\nCincinnati, OH 45212' },
-                { label: 'Email', value: 'info@thesacredhearts.org', href: 'mailto:info@thesacredhearts.org' },
                 { label: 'Phone', value: '513.741.3400', href: 'tel:5137413400' },
                 { label: 'Hours', value: 'Monday – Friday\n10am – 5pm EST' },
               ].map((item) => (
