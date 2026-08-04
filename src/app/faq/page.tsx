@@ -33,7 +33,18 @@ function buildFaqs(freeShippingThreshold: string) {
     { q: 'Do you ship internationally?', a: 'Yes, we can ship internationally. Please contact us directly at info@thesacredhearts.org for international shipping rates and options.' },
     { q: 'What is your return policy?', a: 'We accept returns of unused, undamaged items within 30 days of purchase. If your item arrives damaged or defective, please contact us within 14 days of receipt and we will make it right.' },
     { q: 'How do I pay?', a: 'We use Stripe for secure online checkout. All major credit and debit cards are accepted. Your payment information is processed securely and never stored on our servers.' },
-    { q: 'Can I place a bulk order for a parish or school?', a: 'Yes! We love working with parishes, schools, and religious organizations. Please contact us directly to discuss bulk pricing and special arrangements.' },
+    {
+      q: 'Can I place a bulk order for a parish or school?',
+      a: (
+        <>
+          Yes! We love working with parishes, schools, and religious organizations. Please{' '}
+          <Link href="/contact" style={{ color: 'var(--crimson)', textDecoration: 'underline' }}>
+            contact us
+          </Link>{' '}
+          directly to discuss bulk pricing and special arrangements.
+        </>
+      ),
+    },
     { q: 'Do you offer a Parish Display?', a: 'Yes! We offer a complimentary parish display box so you can share Sacred Hearts images with your parishioners. Contact us to request yours.' },
   ];
 }
