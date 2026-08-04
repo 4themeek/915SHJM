@@ -2,12 +2,18 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useCart } from '@/lib/cart-context';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
   const { cartCount, openCart, shopMaintenance } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Standalone pages (e.g. the /give table-donation QR page) render outside
+  // the normal site structure — no nav, no way back into the main site.
+  if (pathname?.startsWith('/give')) return null;
 
   function toggleMenu() {
     setMenuOpen(prev => !prev);

@@ -1,7 +1,16 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import styles from './Footer.module.css';
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  // Standalone pages (e.g. the /give table-donation QR page) render outside
+  // the normal site structure — no footer, no way back into the main site.
+  if (pathname?.startsWith('/give')) return null;
+
   return (
     <footer className={styles.footer}>
       <div className={styles.inner}>

@@ -1,15 +1,19 @@
 'use client';
 
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useCart } from '@/lib/cart-context';
 import styles from './CartDrawer.module.css';
 
 export default function CartDrawer() {
   const { cart, isOpen, closeCart, changeQty, removeFromCart, cartTotal, freeShippingThreshold } = useCart();
   const router = useRouter();
+  const pathname = usePathname();
 
   const amountToFreeShipping = freeShippingThreshold - cartTotal;
+
+  // Standalone pages (e.g. the /give table-donation QR page) have no cart.
+  if (pathname?.startsWith('/give')) return null;
 
   function handleCheckout() {
     closeCart();
