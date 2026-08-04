@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 function buildFaqs(freeShippingThreshold: string) {
   return [
-    { q: 'Are purchases tax-deductible?', a: 'Yes! The Sacred Hearts is a registered 501(c)3 nonprofit. Every purchase is a tax-deductible donation and you will receive a receipt for your records.' },
+    { q: 'Are purchases tax-deductible?', a: 'The Sacred Hearts is a registered 501(c)3 nonprofit, EIN 31-1442631. Purchases may be a donation and you will receive a receipt for your records. Check with your tax advisor.' },
     { q: 'Do you offer free shipping?', a: `Free shipping is available for orders over $${freeShippingThreshold}. This is subject to change and other promotions.` },
     { q: 'Can I get images at a reduced price if I cannot afford them?', a: 'Absolutely. We believe no family should be without these sacred images for financial reasons. Please contact us directly at info@thesacredhearts.org or call 513.741.3400 and we will be happy to assist you.' },
     { q: 'What sizes are available?', a: 'Most prints and plaques are available in multiple sizes, reflected in the price ranges shown. Contact us or proceed to checkout to select your preferred size.' },
