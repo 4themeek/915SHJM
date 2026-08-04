@@ -118,19 +118,17 @@ Admin-togglable mode that shows a read-only product catalog on the Shop pages an
 
 ---
 
-## 8. Stripe checkout investigation — fixes shipped, needs live test
+## 8. Stripe checkout — FIXED AND CONFIRMED WORKING, plus site-side promo codes
 
-**The bug:** clicking pay creates a Stripe Checkout Session successfully (confirmed via Vercel logs), but Stripe's own hosted checkout page then shows a generic "Something went wrong. You might be having a network connection problem, the link might be expired, or the payment provider cannot be reached." Reported via notes brought over from a separate session, which had already ruled out: empty `NEXT_PUBLIC_SITE_URL` (fixed, confirmed currently correct with no trailing slash), Stripe keys being live/matching, account restrictions, and browser-specific issues (fails identically in Firefox and Edge).
+**The original bug:** clicking pay created a Stripe Checkout Session successfully (confirmed via Vercel logs), but Stripe's own hosted checkout page then showed a generic "Something went wrong. You might be having a network connection problem, the link might be expired, or the payment provider cannot be reached." Notes brought over from a separate session had already ruled out: empty `NEXT_PUBLIC_SITE_URL`, Stripe keys being live/matching, account restrictions, and browser-specific issues (failed identically in Firefox and Edge).
 
-**Two fixes landed this session** (from two parallel sessions working on this — one pushed directly to GitHub mid-session, requiring a merge):
-- **Product images passed to Stripe as unqualified relative paths.** `/api/checkout/route.ts` was passing `item.img` straight through to Stripe's `product_data.images`. Since this session's earlier work moved most product images to local relative paths (`/images/products/product-{id}.jpg`), those were reaching Stripe as invalid non-absolute URLs. Now converts to absolute (`item.img.startsWith('http') ? item.img : \`${siteUrl}${item.img}\``) before sending. **This is the strongest candidate for the actual root cause** — a malformed image URL wouldn't necessarily fail session *creation*, but could plausibly break rendering on Stripe's *hosted* page, matching the symptom exactly.
-- **Switched the client-side redirect** from `stripe.redirectToCheckout({ sessionId })` (Stripe.js's older helper, requiring `@stripe/stripe-js` loaded client-side) to returning `session.url` from the server and doing `window.location.href = url` directly — Stripe's current recommended pattern, and removes one client-side round-trip to Stripe before the customer reaches the hosted page. Lower confidence this was the cause, but a genuine simplification regardless. `CheckoutClient.tsx` no longer imports `loadStripe`/`@stripe/stripe-js` at all.
+**Root cause, confirmed:** product images were being passed to Stripe as unqualified relative paths. `/api/checkout/route.ts` was passing `item.img` straight through to Stripe's `product_data.images`. Since this session's earlier work moved most product images to local relative paths (`/images/products/product-{id}.jpg`), those were reaching Stripe as invalid non-absolute URLs, breaking rendering on Stripe's hosted page. Fixed to convert to absolute (`item.img.startsWith('http') ? item.img : \`${siteUrl}${item.img}\``) before sending. **User confirmed a real checkout now completes successfully end-to-end.**
 
-**Not yet done — needs a real checkout test** to confirm these actually fixed it. If it still fails:
-- Check Stripe Workbench → **Logs** (not Events) for the real current `success_url`/`cancel_url` on a fresh attempt.
-- Test from a different network (e.g. phone on cellular data) to rule out a router/firewall/ad-blocker blocking Stripe's fraud-detection domain (`m.stripe.network`) — this fits the "fails identically in two different browsers" symptom better than a code bug would, since a network-level block would affect both browsers identically while a code bug already should have too, but this is the one hypothesis that was never actually tested.
+Also simplified the client-side redirect while investigating: switched from `stripe.redirectToCheckout({ sessionId })` (Stripe.js's older helper, requiring `@stripe/stripe-js` loaded client-side) to returning `session.url` from the server and doing `window.location.href = url` directly — Stripe's current recommended pattern. `CheckoutClient.tsx` no longer imports `loadStripe`/`@stripe/stripe-js` at all.
 
-**Promo codes — DONE, site-side (superseded an earlier Stripe-native approach).** Initially added `allow_promotion_codes: true` so Stripe's hosted page would show its own promo field, discovering along the way that the site *already* has a separate, custom-built promo-code system (its own `promo_codes` Postgres table, an admin UI at `/admin/settings`, and `/api/validate-promo`) that was never actually wired up — no input field existed on the checkout page, and even if it had, the discount was never read by `/api/checkout` so it wouldn't have reduced the Stripe charge anyway.
+### Promo codes — site-side, not Stripe-side
+
+Initially added `allow_promotion_codes: true` so Stripe's hosted page would show its own promo field, discovering along the way that the site *already* has a separate, custom-built promo-code system (its own `promo_codes` Postgres table, an admin UI at `/admin/settings`, and `/api/validate-promo`) that was never actually wired up — no input field existed on the checkout page, and even if it had, the discount was never read by `/api/checkout` so it wouldn't have reduced the Stripe charge anyway.
 
 At the user's direction, finished the site-side system properly instead of using Stripe's native one:
 - Removed `allow_promotion_codes: true` (Stripe doesn't allow combining it with the `discounts` parameter used below).
@@ -139,7 +137,17 @@ At the user's direction, finished the site-side system properly instead of using
 - `orders` table gained `promo_code`/`promo_discount` columns; the webhook persists them and calls `incrementPromoUses()` **only on `checkout.session.completed`**, not at session creation — so an abandoned cart doesn't burn through a limited-use code.
 - Admin `/admin/orders` table now shows which promo was used per order.
 
-**Practical implication:** codes must be created at `/admin/settings` on this site now — a code created directly in the Stripe Dashboard will **not** work, since `allow_promotion_codes` was removed. Not yet tested with a real checkout — see TODO.md.
+**Practical implication:** codes must be created at `/admin/settings` on this site now — a code created directly in the Stripe Dashboard will **not** work, since `allow_promotion_codes` was removed.
+
+### Per-code "include shipping" toggle
+
+User tested a real $5-off code against a $1.25 product with $5.50 shipping ($6.75 total) and found only $1.25 was credited, shipping left untouched. This was the original design: fixed-dollar discounts were capped at the product subtotal and never touched shipping (`Math.min(promo.value, productSubtotal)`), a pattern that pre-dates this session and was just carried into the server-side validation for consistency.
+
+Added `applies_to_shipping BOOLEAN` to `promo_codes`, selectable per-code via a checkbox on the admin create-code form ("Also apply this discount to shipping cost"). The existing codes table shows "(+ shipping)" next to codes that have it on.
+
+**Bug found and fixed while building this:** percent-type codes were using Stripe's native `percent_off`, which applies against the *entire* session total (product + shipping) regardless of scoping intent — so percent codes were secretly already reaching shipping while fixed-dollar codes weren't, an inconsistency between the two types that existed before this fix. Both types now compute the exact dollar discount server-side (based on product subtotal, or product+shipping if the flag is set) and apply it via a single `amount_off` coupon — consistent behavior for both discount types.
+
+**Not yet tested live** — see TODO.md.
 
 ---
 
