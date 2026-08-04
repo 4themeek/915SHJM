@@ -130,9 +130,16 @@ Admin-togglable mode that shows a read-only product catalog on the Shop pages an
 - Check Stripe Workbench → **Logs** (not Events) for the real current `success_url`/`cancel_url` on a fresh attempt.
 - Test from a different network (e.g. phone on cellular data) to rule out a router/firewall/ad-blocker blocking Stripe's fraud-detection domain (`m.stripe.network`) — this fits the "fails identically in two different browsers" symptom better than a code bug would, since a network-level block would affect both browsers identically while a code bug already should have too, but this is the one hypothesis that was never actually tested.
 
-**Also added:** `allow_promotion_codes: true` on the Checkout Session — Stripe's hosted page now shows its own promo code field automatically.
+**Promo codes — DONE, site-side (superseded an earlier Stripe-native approach).** Initially added `allow_promotion_codes: true` so Stripe's hosted page would show its own promo field, discovering along the way that the site *already* has a separate, custom-built promo-code system (its own `promo_codes` Postgres table, an admin UI at `/admin/settings`, and `/api/validate-promo`) that was never actually wired up — no input field existed on the checkout page, and even if it had, the discount was never read by `/api/checkout` so it wouldn't have reduced the Stripe charge anyway.
 
-**Also discovered (not removed, needs a decision):** the site already has a *separate, custom-built* promo-code system — its own `promo_codes` Postgres table, an admin UI at `/admin/settings`, and `/api/validate-promo`. The checkout page's UI never had an actual input field wired in to use it (the state/logic exists in `CheckoutClient.tsx` but nothing renders it), and even if it had, `/api/checkout` never read the resulting `promoCode`/`promoDiscount` from the request — so the discount would never have actually reduced what Stripe charges. Two non-overlapping, non-functional promo systems existed side by side. Now that Stripe-native codes work, this custom system is redundant unless there's a reason to keep it (e.g. wanting codes manageable from this site's own admin panel instead of the Stripe Dashboard) — see TODO.md.
+At the user's direction, finished the site-side system properly instead of using Stripe's native one:
+- Removed `allow_promotion_codes: true` (Stripe doesn't allow combining it with the `discounts` parameter used below).
+- Added the missing promo input/Apply UI to the checkout Review step (`CheckoutClient.tsx`), showing the discount in both the review totals and the sidebar order summary, with a Remove option.
+- `/api/checkout` **re-validates the code server-side** against the database — never trusts a client-supplied discount amount, since that would be a real tamper vector (a raw POST to the endpoint could otherwise claim any discount). Computes the discount, creates a one-time Stripe `coupon`, and applies it via `discounts` on the session — so the amount Stripe actually charges already reflects the discount, rather than the site trying to reduce individual line-item prices itself.
+- `orders` table gained `promo_code`/`promo_discount` columns; the webhook persists them and calls `incrementPromoUses()` **only on `checkout.session.completed`**, not at session creation — so an abandoned cart doesn't burn through a limited-use code.
+- Admin `/admin/orders` table now shows which promo was used per order.
+
+**Practical implication:** codes must be created at `/admin/settings` on this site now — a code created directly in the Stripe Dashboard will **not** work, since `allow_promotion_codes` was removed. Not yet tested with a real checkout — see TODO.md.
 
 ---
 
