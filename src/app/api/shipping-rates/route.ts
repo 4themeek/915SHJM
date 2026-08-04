@@ -3,7 +3,7 @@ import { shippoPost, getShippingRates } from '@/lib/shippo';
 
 export async function POST(req: NextRequest) {
   try {
-    const { toAddress, weightOz, hasFreeShipping } = await req.json();
+    const { toAddress, weightOz } = await req.json();
 
     if (!toAddress?.street1 || !toAddress?.city || !toAddress?.state || !toAddress?.zip) {
       return NextResponse.json({ error: 'Incomplete address' }, { status: 400 });
@@ -74,19 +74,8 @@ export async function POST(req: NextRequest) {
       weightOz
     );
 
-    const freeOption = hasFreeShipping ? [{
-      id: 'free',
-      carrier: 'Standard',
-      service: 'Free Shipping',
-      amount: 0,
-      amountFormatted: 'Free',
-      currency: 'USD',
-      estimatedDays: 7,
-      duration_terms: '5–10 business days',
-    }] : [];
-
     return NextResponse.json({
-      rates: [...freeOption, ...rates],
+      rates,
       // Pass back correction info so UI can show it
       addressCorrected: wasCorreected,
       correctedAddress: wasCorreected ? correctedAddress : null,

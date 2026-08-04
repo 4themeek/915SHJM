@@ -84,6 +84,20 @@ export async function POST(req: NextRequest) {
 
       const cheapestFreshAmount = Math.min(...freshRates.map(r => r.amount));
 
+      // The client always submits a real carrier/service pair now — match it
+      // against the fresh quote rather than trusting the claimed amount.
+      const matched = freshRates.find(
+        r => r.carrier === shippingRate.carrier && r.service === shippingRate.service
+      );
+      if (!matched) {
+        return NextResponse.json(
+          { error: 'Selected shipping method is no longer available. Please go back and re-select shipping.' },
+          { status: 400 }
+        );
+      }
+      shippingLabel = `${matched.carrier} ${matched.service}`;
+      verifiedShippoRateId = matched.id;
+
       // Independently verify the "all items on sale" free-shipping perk
       // against the database — never trust the client's claim that a cart
       // qualifies.
@@ -95,36 +109,16 @@ export async function POST(req: NextRequest) {
         if (!saleActive) { allItemsOnSale = false; break; }
       }
 
-      let rawAmount: number;
-
-      if (shippingRate.id === 'free' && allItemsOnSale) {
-        rawAmount = 0;
-        shippingLabel = 'Standard — Free Shipping';
-        verifiedShippoRateId = 'free';
-      } else {
-        const matched = freshRates.find(
-          r => r.carrier === shippingRate.carrier && r.service === shippingRate.service
-        );
-        if (!matched) {
-          return NextResponse.json(
-            { error: 'Selected shipping method is no longer available. Please go back and re-select shipping.' },
-            { status: 400 }
-          );
-        }
-        rawAmount = matched.amount;
-        shippingLabel = `${matched.carrier} ${matched.service}`;
-        verifiedShippoRateId = matched.id;
-      }
-
-      // Free-shipping-threshold: only the cheapest available rate is
-      // covered — a pricier choice still costs the difference.
+      // Free-shipping-threshold or all-items-on-sale — either qualifies.
+      // Only the cheapest available rate is covered either way; a pricier
+      // choice still costs the difference.
       const thresholdSetting = await getSetting('free_shipping_threshold');
       const threshold = parseFloat(thresholdSetting || '50');
-      const qualifiesForFreeShipping = threshold > 0 && subtotal >= threshold;
+      const qualifiesForFreeShipping = (threshold > 0 && subtotal >= threshold) || allItemsOnSale;
 
       shippingAmount = qualifiesForFreeShipping
-        ? Math.max(0, rawAmount - cheapestFreshAmount)
-        : rawAmount;
+        ? Math.max(0, matched.amount - cheapestFreshAmount)
+        : matched.amount;
     }
 
     // Add shipping as line item if applicable

@@ -84,7 +84,10 @@ export default function CheckoutClient() {
   const allFreeShipping = cart.every(item => item.sale);
 
   const shippingAmount = selectedRate?.amount || 0;
-  const qualifiesForFreeShipping = freeShippingThreshold > 0 && cartTotal >= freeShippingThreshold;
+  // Qualifies via either the dollar threshold or the all-items-on-sale perk.
+  // Both are recomputed fresh on every render (never baked into a selected
+  // rate) so free shipping correctly un-qualifies if the cart changes.
+  const qualifiesForFreeShipping = (freeShippingThreshold > 0 && cartTotal >= freeShippingThreshold) || allFreeShipping;
   // Free shipping covers only the cheapest available rate — selecting a
   // pricier method still costs the difference between it and the cheapest.
   const cheapestRateAmount = rates.length > 0 ? Math.min(...rates.map(r => r.amount)) : 0;
@@ -134,6 +137,9 @@ export default function CheckoutClient() {
     }));
     setShowCorrectionPrompt(false);
     setAddressCorrection(null);
+    // Proceed to shipping step — the rates were already fetched successfully
+    // for this address, only the correction prompt was blocking progress.
+    setStep('shipping');
   }
 
   function keepOriginalAddress() {
@@ -160,7 +166,6 @@ export default function CheckoutClient() {
         body: JSON.stringify({
           toAddress: address,
           weightOz: totalWeightOz,
-          hasFreeShipping: allFreeShipping,
         }),
       });
 
