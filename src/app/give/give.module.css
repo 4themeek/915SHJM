@@ -89,9 +89,13 @@
   letter-spacing: 0.02em;
 }
 
-.amtCard:hover,
-.amtCard.active {
+.amtCard:hover {
   border-color: var(--gold);
+  background: var(--cream-dark);
+}
+
+.amtCard.active {
+  border-color: var(--crimson);
   background: var(--cream-dark);
 }
 
