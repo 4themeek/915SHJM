@@ -16,7 +16,7 @@ export default function DonatePage() {
       <div className="content-block">
         <h2>Make a Donation</h2>
         <p>
-          The Sacred Hearts is a registered 501(c)3 nonprofit. All donations are tax-deductible and go directly
+          The Sacred Hearts is a registered 501(c)3 nonprofit. EIN: 31-1442631. All donations are tax-deductible and go directly
           toward producing and distributing sacred images, supporting families in need, and expanding our ministry.
         </p>
         <p>
