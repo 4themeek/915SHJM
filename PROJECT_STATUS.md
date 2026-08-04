@@ -1,6 +1,6 @@
 # Sacred Hearts (915SHJM) — Project Status
 
-**Last updated:** August 4, 2026 (standalone /give table-donation page)
+**Last updated:** August 4, 2026 (Vercel Attack Mode blocking Stripe webhook; rate limiting added)
 **Repo:** github.com/4themeek/915SHJM (main branch, auto-deploys to Vercel)
 **Live site:** https://www.thesacredhearts.org
 **Stack:** Next.js 15, @vercel/postgres (Neon-backed), Stripe, Shippo, Vercel Blob (unused/private — see below)
@@ -226,6 +226,22 @@ New need: at physical events/tables where sacred images are picked up in person,
 - `src/app/api/give/route.ts` — its **own** Stripe Checkout session route, deliberately not sharing code with `/api/donate`, so future edits to the main donate flow can't accidentally affect the table-donation flow (or vice versa). Tags `metadata.type: 'table_donation'` so these are distinguishable from regular purchases/donations in `/admin/orders` (the Stripe webhook already saves every completed session as an order regardless of type, so table donations show up there automatically).
 - **How it's kept "not part of the site":** Next.js's root layout (`src/app/layout.tsx`) wraps every route in `Navbar`, `Footer`, and `CartDrawer` — there's no way to opt a single route out of that at the layout level without restructuring the whole app into route groups (a bigger, riskier change). Instead, `Navbar.tsx`, `Footer.tsx` (converted to a client component for this), and `CartDrawer.tsx` each check `usePathname()` and render `null` when the path starts with `/give`. The CSS variables and fonts from `globals.css` still apply globally, so the page matches the site's color scheme without needing any of the site's nav chrome. `robots: { index: false, follow: false }` on both `/give` and `/give/success` keeps them out of search results too, and nothing links to them from anywhere in the site — reachable only via the QR code's direct URL.
 - Verified live: no server errors, `/give` renders with zero nav/footer/cart elements in the DOM, the rest of the site (checked via homepage) still renders them normally, preset/custom amount selection works, and the checkout POST reaches Stripe (only fails locally due to the same sandboxed-API-key limitation hit throughout this project).
+
+---
+
+## 13. Missing orders investigated — Vercel Attack Mode is blocking Stripe's webhook
+
+User reported completing real Stripe checkouts but seeing nothing in `/admin/orders`. `STRIPE_WEBHOOK_SECRET` was confirmed present in Vercel (Production + Preview) via `vercel env ls` — that config step from section 1 was already done. So the question became: why isn't the webhook actually landing?
+
+**Root cause, confirmed directly:** Vercel's **Attack Mode** is enabled on the live site (`vercel firewall attack-mode` — *"challenges all incoming requests with a verification page"*). A direct `curl` POST to `https://www.thesacredhearts.org/api/webhooks/stripe` — even spoofing Stripe's real webhook User-Agent (`Stripe/1.0 (+https://stripe.com/docs/webhooks)`) — came back `HTTP 429` with Vercel's own "Security Checkpoint" interstitial page, never reaching the Next.js app at all. A plain `curl` GET to the homepage got the identical challenge. Attack Mode operates at Vercel's edge, upstream of any application code — a real browser resolves the JS challenge invisibly, but Stripe's webhook is a server-to-server POST with no JS engine behind it, so every `checkout.session.completed` delivery gets bounced before `/api/webhooks/stripe` ever runs. That's the entire gap: checkout itself works fine (confirmed live earlier), but the follow-up webhook that would actually create the order record never arrives.
+
+**Why disabling Attack Mode doesn't weaken security here:** the webhook route already does the *correct* thing — `stripe.webhooks.constructEvent()` cryptographically verifies Stripe's signature on every request using `STRIPE_WEBHOOK_SECRET`, rejecting anything unsigned with a 400. That's the real security boundary for this endpoint, and it can't be spoofed the way an IP or User-Agent can. Attack Mode's edge-level challenge adds nothing meaningful on top of that — it just breaks the one legitimate automated client (Stripe) that needs through.
+
+**Blocked from fixing it directly:** tried `vercel firewall attack-mode disable` — Vercel's own CLI refuses: *"Disabling attack mode affects traffic handling and cannot be performed non-interactively. Agents must not make this change on behalf of a user."* This is a hard platform-level guardrail, not a judgment call — the user has to run that command themselves in their own terminal. **Not yet confirmed done** — see TODO.md.
+
+**What was done instead (complementary, not a substitute):** added per-IP rate limiting to the four public POST endpoints that *don't* have Stripe's signature check to lean on — `src/lib/rate-limit.ts`, a fixed-window counter backed by the existing Postgres DB (no new service to provision, no new env vars). Fails open on any DB error, so a rate-limit infra hiccup can never block a legitimate submission — verified locally (with the DB intentionally unreachable in this sandbox) that requests still pass through to the normal downstream logic. Limits: `/api/contact` 5/10min, `/api/checkout` + `/api/donate` + `/api/give` 10/10min each, all keyed by `x-forwarded-for`.
+
+Also set up while investigating this: a GitHub branch ruleset for `main` (blocks force-push and branch deletion — see TODO.md's "GitHub repository security" section for the fuller checklist, most of which is still open: secret scanning, push protection, Dependabot, CodeQL).
 
 ---
 

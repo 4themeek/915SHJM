@@ -7,8 +7,8 @@ Actionable, outstanding items only. For full context, architecture, and "why" on
 ## Order tracking system — config steps (code is merged, not yet live)
 
 - [ ] Confirm `SHIPPO_API_KEY` in Vercel is the **live** Shippo token, not a test key
-- [ ] Register a Stripe webhook: Stripe Dashboard → Developers → Webhooks → Add endpoint → `https://www.thesacredhearts.org/api/webhooks/stripe` → event `checkout.session.completed` → copy the signing secret
-- [ ] Add that signing secret as `STRIPE_WEBHOOK_SECRET` in Vercel → Environment Variables
+- [x] Register a Stripe webhook + add `STRIPE_WEBHOOK_SECRET` to Vercel — **DONE**, confirmed present in Vercel env vars (Production + Preview).
+- [ ] **Disable Vercel Attack Mode — blocks Stripe's webhook deliveries.** User reported no orders appearing in `/admin/orders` despite live Stripe checkouts working. Root cause found: Vercel's "Attack Mode" is enabled on the site, challenging *all* incoming requests with a JS verification page — a real browser passes this invisibly, but Stripe's webhook is a server-to-server POST with no JS engine, so every `checkout.session.completed` delivery gets bounced with a 429 before it ever reaches `/api/webhooks/stripe`. Confirmed via direct curl test (even using Stripe's real webhook User-Agent) — got Vercel's "Security Checkpoint" challenge page, not the app. The webhook route itself is not the problem — it already does proper Stripe signature verification, which is the real security boundary for that endpoint; Attack Mode adds no meaningful protection there, only breaks it. **Action needed:** run `vercel firewall attack-mode disable` — Vercel's own CLI refuses to let an agent do this non-interactively ("Agents must not make this change on behalf of a user"), so this has to be run by the user directly in a terminal. Takes effect immediately, no redeploy needed.
 - [ ] Redeploy, then place a real or Stripe test-mode order and confirm it appears in `/admin/orders`, and that "Create Label" returns a real Shippo label + tracking number
 
 ## Future feature ideas
@@ -42,6 +42,7 @@ Actionable, outstanding items only. For full context, architecture, and "why" on
 - [ ] **`runMigrations()` runs on every product save.** Two `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` statements in the products PUT route — harmless (idempotent) but only ever needs to run once, not every save.
 - [ ] **Upgrade `next@15.3.6`.** Known high-severity security vulnerability per `npm install`'s own warning. (Dependabot security updates, once enabled below, would auto-PR this.)
 - [ ] **Audit git history for anything sensitive.** No `.gitignore` existed in this repo until this project — worth a check that nothing large or sensitive got committed before it did. GitHub's secret-scanning historical scan (below) will help surface this once enabled — if it finds anything, the fix is to rotate that key immediately (Stripe/Brevo/Shippo dashboards), not just remove the commit, since the repo is public.
+- [x] **Rate limiting on public write endpoints — DONE.** `/api/contact`, `/api/checkout`, `/api/donate`, `/api/give` had no rate limiting — a script could flood them (spam contact submissions, hammer Stripe session creation). Added `src/lib/rate-limit.ts`, a per-IP fixed-window counter backed by the existing Postgres DB (no new service), fails open on any infra error so it never blocks a legitimate submission. 5 req/10 min on contact, 10 req/10 min on the three checkout-session routes. The Stripe webhook route doesn't need this — it already has Stripe's own signature verification, a stronger guarantee than IP-based limiting.
 
 ## GitHub repository security (public repo — 4themeek/915SHJM)
 
