@@ -69,6 +69,7 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
         <div className={styles.dashHeaderRight}>
           <Link href="/admin/dashboard" className={styles.dashViewSite}>← Products</Link>
           <Link href="/admin/messages" className={styles.dashViewSite}>✉ Messages</Link>
+          <a href="https://statcounter.com/login/" className={styles.dashViewSite} target="_blank" rel="noopener noreferrer">📊 Analytics ↗</a>
           <Link href="/" className={styles.dashViewSite} target="_blank">View Site ↗</Link>
           <button className={styles.dashLogout} onClick={handleLogout}>Sign Out</button>
         </div>

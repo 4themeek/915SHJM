@@ -124,6 +124,7 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
           <Link href="/admin/orders" className={styles.dashViewSite}>📦 Orders</Link>
           <Link href="/admin/messages" className={styles.dashViewSite}>✉ Messages</Link>
           <Link href="/admin/settings" className={styles.dashViewSite}>⚙ Settings</Link>
+          <a href="https://statcounter.com/login/" className={styles.dashViewSite} target="_blank" rel="noopener noreferrer">📊 Analytics ↗</a>
           <Link href="/" className={styles.dashViewSite} target="_blank">View Site ↗</Link>
           <button className={styles.dashLogout} onClick={handleLogout}>Sign Out</button>
         </div>
