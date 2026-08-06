@@ -95,6 +95,7 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
             <thead>
               <tr>
                 <th>Order</th>
+                <th>Date</th>
                 <th>Customer</th>
                 <th>Ship To</th>
                 <th>Total</th>
@@ -106,6 +107,13 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
               {orders.map(order => (
                 <tr key={order.id}>
                   <td>#{order.id}</td>
+                  <td style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                    {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    <br />
+                    <span style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>
+                      {new Date(order.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                    </span>
+                  </td>
                   <td>
                     {order.customer_name}<br />
                     <span style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>{order.customer_email}</span>
