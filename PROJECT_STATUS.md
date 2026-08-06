@@ -1,6 +1,6 @@
 # Sacred Hearts (915SHJM) — Project Status
 
-**Last updated:** August 5, 2026 (webhook domain fix, orders confirmed live; Blob store fixed; Shippo live key pending)
+**Last updated:** August 6, 2026 (sticky orders table header; new Donations Rec'd admin panel — donations no longer land in the orders table)
 **Repo:** github.com/4themeek/915SHJM (main branch, auto-deploys to Vercel)
 **Live site:** https://www.thesacredhearts.org
 **Stack:** Next.js 15, @vercel/postgres (Neon-backed), Stripe, Shippo, Vercel Blob (unused/private — see below)
@@ -223,7 +223,7 @@ New need: at physical events/tables where sacred images are picked up in person,
 **How it's built:**
 - `src/app/give/page.tsx` + `GiveClient.tsx` — preset amounts ($10/$20/$50/$100) plus a custom field, "Donate $X Securely" button. No shipping, no cart, no product selection — just an amount and a Stripe redirect.
 - `src/app/give/success/page.tsx` — dedicated thank-you page, styled the same way, no links back into the site.
-- `src/app/api/give/route.ts` — its **own** Stripe Checkout session route, deliberately not sharing code with `/api/donate`, so future edits to the main donate flow can't accidentally affect the table-donation flow (or vice versa). Tags `metadata.type: 'table_donation'` so these are distinguishable from regular purchases/donations in `/admin/orders` (the Stripe webhook already saves every completed session as an order regardless of type, so table donations show up there automatically).
+- `src/app/api/give/route.ts` — its **own** Stripe Checkout session route, deliberately not sharing code with `/api/donate`, so future edits to the main donate flow can't accidentally affect the table-donation flow (or vice versa). Tags `metadata.type: 'table_donation'`. *(Superseded — see section 15: as of Aug 6 2026, `table_donation` and `donation` sessions no longer land in `/admin/orders` at all; they're routed to a dedicated `donations` table and `/admin/donations` report instead.)*
 - **How it's kept "not part of the site":** Next.js's root layout (`src/app/layout.tsx`) wraps every route in `Navbar`, `Footer`, and `CartDrawer` — there's no way to opt a single route out of that at the layout level without restructuring the whole app into route groups (a bigger, riskier change). Instead, `Navbar.tsx`, `Footer.tsx` (converted to a client component for this), and `CartDrawer.tsx` each check `usePathname()` and render `null` when the path starts with `/give`. The CSS variables and fonts from `globals.css` still apply globally, so the page matches the site's color scheme without needing any of the site's nav chrome. `robots: { index: false, follow: false }` on both `/give` and `/give/success` keeps them out of search results too, and nothing links to them from anywhere in the site — reachable only via the QR code's direct URL.
 - Verified live: no server errors, `/give` renders with zero nav/footer/cart elements in the DOM, the rest of the site (checked via homepage) still renders them normally, preset/custom amount selection works, and the checkout POST reaches Stripe (only fails locally due to the same sandboxed-API-key limitation hit throughout this project).
 
@@ -281,6 +281,22 @@ Vercel Blob's access level can only be set at store creation, not changed afterw
 - Triggering a fresh production deployment (`vercel deploy --prod`) so the new token is actually live, since already-running serverless functions don't pick up new env vars without a redeploy
 
 No application code changes were needed — the upload route's logic was already correct, it just had nowhere valid to write to. Confirmed with the user beforehand that this change touches nothing else live on the site (checkout, donate, give, contact, admin auth/orders/messages — none of them read Blob env vars). **Not yet confirmed working by the user** — awaiting a real upload attempt in `/admin`.
+
+---
+
+## 15. Sticky orders table header + new "Donations Rec'd" admin panel
+
+**Sticky table header:** `/admin/orders`'s column title row (`Order/Date/Customer/...`) previously scrolled away with the rest of the page past the first screenful — only the top navy admin nav bar (`.dashHeader`) was pinned. Added `position: sticky; top: 60px` (60px = the nav bar's height, so it sits just below without overlapping) to the `.th` class in `admin.module.css`. No ancestor of the table has its own `overflow`/`max-height`, so the whole page is the scroll container and this works without further layout changes.
+
+**Donations previously polluted `/admin/orders`:** both `/donate` and `/give` (table-QR donations) create Stripe Checkout sessions tagged `metadata.type: 'donation'` / `'table_donation'`, but the webhook (`src/app/api/webhooks/stripe/route.ts`) never branched on that — every completed session, donation or product purchase alike, got written into the `orders` table via `createOrder()`. That meant every donation showed up in Orders with blank shipping fields, a meaningless hardcoded weight, and a "Create Label" button that made no sense for a gift.
+
+**Fixed, plus new feature, in one pass:**
+- New `donations` Postgres table (`src/lib/db.ts`): `stripe_session_id`, `source` (`donation`/`table_donation`), `donor_name`, `donor_email`, `amount`, `currency`, `status` (`received`), `thank_you_sent_at`, `viewed` (bool), `created_at`.
+- The webhook now checks `meta.type` first — if it's a donation type, it inserts into `donations` (with its own idempotency check) and returns early, never touching `orders`. Non-donation checkouts are unaffected — same `createOrder()` path as before.
+- **New admin nav item, "Donations Rec'd,"** added to all 5 admin page headers (Dashboard, Orders, Messages, Settings, and the new Donations page itself), linking to `/admin/donations`. Shows a small crimson count bubble (`DonationsNavBadge.tsx`, client-side fetch to `/api/admin/donations/unread-count`) for donations not yet viewed. Opening `/admin/donations` marks all as viewed server-side before rendering, so the bubble clears the moment you look.
+- `/admin/donations` (`DonationsClient.tsx`) — a table of Date/Time, Donor Name + Email, Amount, Source (Online vs. Table/QR), Status, and a **Send Thank You** button per row. Clicking it POSTs to `/api/admin/donations/[id]/thank-you`, which sends a templated thank-you email via Brevo (`sendDonationThankYouEmail()` in `src/lib/email.ts`, same provider/pattern as the contact-form notification email) and stamps `thank_you_sent_at`; the button then shows "✓ Sent [date]" instead of re-sending.
+- **Not retroactive:** any donations that landed in the `orders` table before this fix stay there — this only changes behavior for donations completed after this deploy. Worth a one-time manual look at `/admin/orders` for old donation-shaped rows (single "Donation —" or "Table Donation —" line item, no shipping address) if historical cleanup ever matters.
+- Verified: `npx tsc --noEmit` clean; dev server compiles all new routes with no errors; unauthenticated `/admin/donations` correctly redirects to `/admin` login and `/api/admin/donations/unread-count` responds without crashing. Full live donation → email flow not exercised end-to-end (local Postgres unreachable in this sandbox, same limitation as every other DB-backed feature built this engagement) — closely mirrors the already-proven `orders`/`OrdersClient` pattern.
 
 ---
 
