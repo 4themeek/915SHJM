@@ -11,6 +11,25 @@ interface Props {
   adminEmail: string;
 }
 
+interface LineItem {
+  description: string;
+  quantity: number;
+  amount_total: number;
+}
+
+// Line items include the shipping charge as its own entry (see
+// /api/checkout's "Shipping — {carrier} {service}" line) — that's not a
+// purchased product, so it's excluded from the items list shown here.
+function parseLineItems(raw: unknown): LineItem[] {
+  let items: any[];
+  if (Array.isArray(raw)) items = raw;
+  else if (typeof raw === 'string') {
+    try { items = JSON.parse(raw); } catch { return []; }
+  } else return [];
+
+  return items.filter(li => li && !String(li.description || '').startsWith('Shipping'));
+}
+
 export default function OrdersClient({ orders: initialOrders, adminEmail }: Props) {
   const [orders, setOrders] = useState(initialOrders);
   const [busyId, setBusyId] = useState<number | null>(null);
@@ -94,10 +113,11 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={styles.th}>Order</th>
+                <th className={styles.th} style={{ width: '5.5rem' }}>Order</th>
                 <th className={styles.th}>Date</th>
                 <th className={styles.th}>Customer</th>
                 <th className={styles.th}>Ship To</th>
+                <th className={styles.th}>Items</th>
                 <th className={styles.th}>Total</th>
                 <th className={styles.th}>Status</th>
                 <th className={styles.th}>Label / Tracking</th>
@@ -106,7 +126,7 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
             <tbody>
               {orders.map(order => (
                 <tr key={order.id}>
-                  <td>#{order.id}</td>
+                  <td style={{ width: '5.5rem' }}>#{order.id}</td>
                   <td style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                     {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     <br />
@@ -121,6 +141,17 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
                   <td style={{ fontSize: '0.85rem' }}>
                     {order.shipping_street1}<br />
                     {order.shipping_city}, {order.shipping_state} {order.shipping_zip}
+                  </td>
+                  <td style={{ fontSize: '0.8rem', maxWidth: '220px' }}>
+                    {parseLineItems(order.line_items).map((item, i) => (
+                      <div
+                        key={i}
+                        title={`${item.quantity}× ${item.description}`}
+                        style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                      >
+                        {item.quantity}× {item.description}
+                      </div>
+                    ))}
                   </td>
                   <td>
                     ${Number(order.amount_total).toFixed(2)}
