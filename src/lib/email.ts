@@ -63,3 +63,67 @@ export async function sendContactNotificationEmail(data: {
     return false;
   }
 }
+
+export async function sendDonationThankYouEmail(data: {
+  donorName: string | null;
+  donorEmail: string;
+  amount: number;
+}): Promise<boolean> {
+  const BREVO_API_KEY = process.env.BREVO_API_KEY;
+  if (!BREVO_API_KEY) {
+    console.error('BREVO_API_KEY not set');
+    return false;
+  }
+
+  const greetingName = data.donorName ? data.donorName.split(' ')[0] : 'Friend';
+
+  try {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': BREVO_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: {
+          name: 'The Sacred Hearts Ministry',
+          email: 'themeek@hush.com',
+        },
+        to: [{ email: data.donorEmail, name: data.donorName || undefined }],
+        subject: '✦ Thank You for Your Gift to The Sacred Hearts',
+        htmlContent: `
+          <div style="font-family: Georgia, serif; max-width: 500px; margin: 0 auto; padding: 2rem; background: #FAF6EF; border: 1px solid #C9A84C;">
+            <h2 style="font-family: Georgia, serif; color: #8B1A1A; text-align: center; letter-spacing: 0.05em;">
+              ✦ Thank You, ${greetingName} ✦
+            </h2>
+            <p style="color: #3D2B1F; font-size: 1rem; line-height: 1.7;">
+              On behalf of The Sacred Hearts Ministry, thank you for your generous gift of
+              <strong>$${data.amount.toFixed(2)}</strong>. Your support helps us continue
+              spreading devotion to the Sacred Heart of Jesus and the Immaculate Heart of Mary.
+            </p>
+            <p style="color: #3D2B1F; font-size: 1rem; line-height: 1.7;">
+              The Sacred Hearts is a 501(c)3 nonprofit ministry, and your donation is tax-deductible.
+            </p>
+            <p style="color: #3D2B1F; font-size: 1rem; line-height: 1.7;">
+              With gratitude,<br />The Sacred Hearts Ministry
+            </p>
+            <hr style="border-color: #C9A84C; margin: 1.5rem 0;" />
+            <p style="color: #7A6555; font-size: 0.8rem; text-align: center;">
+              Cincinnati, Ohio · 501(c)3 Ministry
+            </p>
+          </div>
+        `,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error('Brevo error:', err);
+    }
+
+    return res.ok;
+  } catch (err) {
+    console.error('Brevo send error:', err);
+    return false;
+  }
+}

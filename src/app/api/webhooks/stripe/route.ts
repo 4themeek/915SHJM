@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createOrdersTable, orderExistsBySessionId, createOrder, incrementPromoUses } from '@/lib/db';
+import {
+  createOrdersTable, orderExistsBySessionId, createOrder, incrementPromoUses,
+  createDonationsTable, donationExistsBySessionId, createDonation,
+} from '@/lib/db';
+
+const DONATION_TYPES = new Set(['donation', 'table_donation']);
 
 export async function POST(req: NextRequest) {
   const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -25,9 +30,27 @@ export async function POST(req: NextRequest) {
   }
 
   await createOrdersTable();
+  await createDonationsTable();
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
+    const meta = session.metadata || {};
+
+    if (DONATION_TYPES.has(meta.type || '')) {
+      const exists = await donationExistsBySessionId(session.id);
+      if (exists) {
+        return NextResponse.json({ received: true, duplicate: true });
+      }
+      await createDonation({
+        stripe_session_id: session.id,
+        source: meta.type,
+        donor_name: session.customer_details?.name || null,
+        donor_email: session.customer_details?.email || null,
+        amount: (session.amount_total || 0) / 100,
+        currency: session.currency || 'usd',
+      });
+      return NextResponse.json({ received: true });
+    }
 
     // Idempotency: Stripe can retry webhook delivery
     const exists = await orderExistsBySessionId(session.id);
@@ -36,7 +59,6 @@ export async function POST(req: NextRequest) {
     }
 
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100 });
-    const meta = session.metadata || {};
 
     await createOrder({
       stripe_session_id: session.id,

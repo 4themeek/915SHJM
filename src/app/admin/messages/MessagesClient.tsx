@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ContactMessage } from '@/lib/db';
 import styles from '../admin.module.css';
+import DonationsNavBadge from '../DonationsNavBadge';
 
 interface Props {
   messages: ContactMessage[];
@@ -58,6 +59,7 @@ export default function MessagesClient({ messages: initialMessages, adminEmail }
         <div className={styles.dashHeaderRight}>
           <Link href="/admin/dashboard" className={styles.dashViewSite}>← Products</Link>
           <Link href="/admin/orders" className={styles.dashViewSite}>📦 Orders</Link>
+          <Link href="/admin/donations" className={styles.dashViewSite}>Donations Rec&apos;d<DonationsNavBadge /></Link>
           <Link href="/admin/settings" className={styles.dashViewSite}>⚙ Settings</Link>
           <Link href="/" className={styles.dashViewSite} target="_blank">View Site ↗</Link>
           <button className={styles.dashLogout} onClick={handleLogout}>Sign Out</button>

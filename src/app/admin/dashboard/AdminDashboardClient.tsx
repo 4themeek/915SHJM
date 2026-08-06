@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DbProduct } from '@/lib/db';
 import styles from '../admin.module.css';
+import DonationsNavBadge from '../DonationsNavBadge';
 
 interface Props {
   products: DbProduct[];
@@ -122,6 +123,7 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
         </div>
         <div className={styles.dashHeaderRight}>
           <Link href="/admin/orders" className={styles.dashViewSite}>📦 Orders</Link>
+          <Link href="/admin/donations" className={styles.dashViewSite}>Donations Rec&apos;d<DonationsNavBadge /></Link>
           <Link href="/admin/messages" className={styles.dashViewSite}>✉ Messages</Link>
           <Link href="/admin/settings" className={styles.dashViewSite}>⚙ Settings</Link>
           <Link href="/" className={styles.dashViewSite} target="_blank">View Site ↗</Link>

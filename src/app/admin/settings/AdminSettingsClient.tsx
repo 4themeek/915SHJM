@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { PromoCode } from '@/lib/db';
 import styles from '../admin.module.css';
 import settingsStyles from './settings.module.css';
+import DonationsNavBadge from '../DonationsNavBadge';
 
 interface Props {
   freeShippingThreshold: string;
@@ -125,6 +126,7 @@ export default function AdminSettingsClient({ freeShippingThreshold, promoCodes:
         </div>
         <div className={styles.dashHeaderRight}>
           <Link href="/admin/dashboard" className={styles.dashViewSite}>← Products</Link>
+          <Link href="/admin/donations" className={styles.dashViewSite}>Donations Rec&apos;d<DonationsNavBadge /></Link>
           <Link href="/admin/messages" className={styles.dashViewSite}>✉ Messages</Link>
           <Link href="/" className={styles.dashViewSite} target="_blank">View Site ↗</Link>
           <button className={styles.dashLogout} onClick={handleLogout}>Sign Out</button>

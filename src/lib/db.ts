@@ -523,3 +523,88 @@ export async function markContactMessageRead(id: number, read: boolean): Promise
 export async function deleteContactMessage(id: number): Promise<void> {
   await sql`DELETE FROM contact_messages WHERE id = ${id}`;
 }
+
+// ─────────────────────────────────────────────────────────────
+// DONATIONS  (from /donate and /give — kept separate from `orders`
+// since they have no shipment, and the "Rec'd" nav badge needs a
+// dedicated `viewed` flag)
+// ─────────────────────────────────────────────────────────────
+
+export interface Donation {
+  id: number;
+  stripe_session_id: string;
+  source: string;
+  donor_name: string | null;
+  donor_email: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  thank_you_sent_at: string | null;
+  viewed: boolean;
+  created_at: string;
+}
+
+export async function createDonationsTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS donations (
+      id SERIAL PRIMARY KEY,
+      stripe_session_id TEXT UNIQUE NOT NULL,
+      source TEXT NOT NULL DEFAULT 'donate',
+      donor_name TEXT,
+      donor_email TEXT,
+      amount NUMERIC(10,2) NOT NULL DEFAULT 0,
+      currency TEXT NOT NULL DEFAULT 'usd',
+      status TEXT NOT NULL DEFAULT 'received',
+      thank_you_sent_at TIMESTAMPTZ,
+      viewed BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+}
+
+export async function donationExistsBySessionId(sessionId: string): Promise<boolean> {
+  const { rows } = await sql`SELECT id FROM donations WHERE stripe_session_id = ${sessionId}`;
+  return rows.length > 0;
+}
+
+export async function createDonation(data: {
+  stripe_session_id: string;
+  source: string;
+  donor_name: string | null;
+  donor_email: string | null;
+  amount: number;
+  currency: string;
+}): Promise<Donation> {
+  const { rows } = await sql<Donation>`
+    INSERT INTO donations (stripe_session_id, source, donor_name, donor_email, amount, currency)
+    VALUES (${data.stripe_session_id}, ${data.source}, ${data.donor_name}, ${data.donor_email}, ${data.amount}, ${data.currency})
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function getAllDonationsAdmin(): Promise<Donation[]> {
+  const { rows } = await sql<Donation>`SELECT * FROM donations ORDER BY created_at DESC`;
+  return rows;
+}
+
+export async function getDonationById(id: number): Promise<Donation | null> {
+  const { rows } = await sql<Donation>`SELECT * FROM donations WHERE id = ${id}`;
+  return rows[0] || null;
+}
+
+export async function getUnviewedDonationCount(): Promise<number> {
+  const { rows } = await sql`SELECT COUNT(*)::int AS count FROM donations WHERE viewed = false`;
+  return (rows[0] as any)?.count ?? 0;
+}
+
+export async function markAllDonationsViewed(): Promise<void> {
+  await sql`UPDATE donations SET viewed = true WHERE viewed = false`;
+}
+
+export async function markDonationThankYouSent(id: number): Promise<Donation> {
+  const { rows } = await sql<Donation>`
+    UPDATE donations SET thank_you_sent_at = NOW() WHERE id = ${id} RETURNING *
+  `;
+  return rows[0];
+}
