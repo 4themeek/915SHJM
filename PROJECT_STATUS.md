@@ -1,6 +1,6 @@
 # Sacred Hearts (915SHJM) — Project Status
 
-**Last updated:** August 4, 2026 (Vercel Attack Mode blocking Stripe webhook; rate limiting added)
+**Last updated:** August 5, 2026 (webhook domain fix, orders confirmed live; Blob store fixed; Shippo live key pending)
 **Repo:** github.com/4themeek/915SHJM (main branch, auto-deploys to Vercel)
 **Live site:** https://www.thesacredhearts.org
 **Stack:** Next.js 15, @vercel/postgres (Neon-backed), Stripe, Shippo, Vercel Blob (unused/private — see below)
@@ -237,11 +237,50 @@ User reported completing real Stripe checkouts but seeing nothing in `/admin/ord
 
 **Why disabling Attack Mode doesn't weaken security here:** the webhook route already does the *correct* thing — `stripe.webhooks.constructEvent()` cryptographically verifies Stripe's signature on every request using `STRIPE_WEBHOOK_SECRET`, rejecting anything unsigned with a 400. That's the real security boundary for this endpoint, and it can't be spoofed the way an IP or User-Agent can. Attack Mode's edge-level challenge adds nothing meaningful on top of that — it just breaks the one legitimate automated client (Stripe) that needs through.
 
-**Blocked from fixing it directly:** tried `vercel firewall attack-mode disable` — Vercel's own CLI refuses: *"Disabling attack mode affects traffic handling and cannot be performed non-interactively. Agents must not make this change on behalf of a user."* This is a hard platform-level guardrail, not a judgment call — the user has to run that command themselves in their own terminal. **Not yet confirmed done** — see TODO.md.
+**Blocked from fixing it directly:** tried `vercel firewall attack-mode disable` — Vercel's own CLI refuses: *"Disabling attack mode affects traffic handling and cannot be performed non-interactively. Agents must not make this change on behalf of a user."* This is a hard platform-level guardrail, not a judgment call — the user ran it themselves. **Update: this was not actually the root cause** — see section 14. Orders still didn't appear after this was disabled, which led to finding the real problem.
 
 **What was done instead (complementary, not a substitute):** added per-IP rate limiting to the four public POST endpoints that *don't* have Stripe's signature check to lean on — `src/lib/rate-limit.ts`, a fixed-window counter backed by the existing Postgres DB (no new service to provision, no new env vars). Fails open on any DB error, so a rate-limit infra hiccup can never block a legitimate submission — verified locally (with the DB intentionally unreachable in this sandbox) that requests still pass through to the normal downstream logic. Limits: `/api/contact` 5/10min, `/api/checkout` + `/api/donate` + `/api/give` 10/10min each, all keyed by `x-forwarded-for`.
 
 Also set up while investigating this: a GitHub branch ruleset for `main` (blocks force-push and branch deletion — see TODO.md's "GitHub repository security" section for the fuller checklist, most of which is still open: secret scanning, push protection, Dependabot, CodeQL).
+
+---
+
+## 14. Real webhook root cause found: wrong domain, not Attack Mode — plus Blob store and Shippo key gaps
+
+Attack Mode (section 13) turned out to be a red herring — or at most a secondary issue affecting only adversarial-looking test traffic (repeated curl requests with forged Stripe headers, sent from this sandbox during diagnosis). The user disabled it, placed a **real** test order, and still saw nothing in `/admin/orders`.
+
+**Actual root cause:** the Stripe webhook endpoint was registered against the wrong domain variant. The real Stripe event payload for the test order showed:
+```
+"cancel_url": "https://thesacredhearts.org/checkout",
+"success_url": "https://thesacredhearts.org/order-success?session_id={CHECKOUT_SESSION_ID}"
+```
+No `www.` — because `NEXT_PUBLIC_SITE_URL` is set to the bare/apex domain. Stripe's own delivery log for the event confirmed the mechanism directly: `"redirect": "https://www.thesacredhearts.org/api/webhooks/stripe", "status": "308"`. Vercel redirects the apex domain to `www.thesacredhearts.org` — and Stripe's webhook sender does not follow redirects (standard practice, avoids being tricked into delivering signed payloads to an unintended host). So every delivery attempt got a 308 back and was recorded as failed, silently, for the entire time this was being debugged.
+
+**Fixed by the user:** updated the webhook endpoint URL in Stripe Dashboard to include `www.`, then clicked "Resend" on the failed test event — got a 200 OK, and the order appeared in `/admin/orders` immediately. **Still open:** `NEXT_PUBLIC_SITE_URL` in Vercel should also be updated to the `www.` version so future checkout/donate/give success and cancel URLs are correct going forward, not just the webhook.
+
+**Promo code use-count, explained for free:** the user separately asked why `DGDG55`'s use count had been stuck at 0 despite real test checkouts, then jumped to 1. Same cause — `incrementPromoUses()` only runs inside the webhook handler (`checkout.session.completed`), which had been silently failing this whole time. The one resent event (which happened to use that promo code) is exactly what bumped it to 1. Not a separate bug; direct confirmation that the counting logic itself was always correct.
+
+### Create Label failure → SHIPPO_API_KEY never set, checkout has been running on a hardcoded test key
+
+With orders now landing correctly, the user tried "Create Label" and got `"Invalid shippo token header. No credentials provided"`. `vercel env ls` confirmed `SHIPPO_API_KEY` doesn't exist in the project at all — it was never set, despite being the very first item on this TODO list since the start of the engagement.
+
+This also explained something that looked fine but wasn't: `src/lib/shippo.ts` has `process.env.SHIPPO_API_KEY || 'shippo_test_dc2753f1272bcb293a8c5285e44346b46a79a665'` — a **hardcoded Shippo test-mode key** as its fallback. Since the real env var was never set, every shipping-rate quote shown at checkout has actually been running against Shippo's test mode this whole time, not the real account — test mode still returns realistic-looking quotes, so this was invisible. `create-label/route.ts` has no such fallback (`|| ''`), so it failed loudly instead of silently, which is what surfaced the gap.
+
+Improved `create-label/route.ts` to log Shippo's full raw response server-side on failure (previously swallowed — only a generic "Label purchase failed" was ever shown, with nothing to diagnose from). User requested a live Shippo key; Shippo said 2-3 hours to issue.
+
+**Deliberately held for later:** removing the hardcoded test-key fallback from `shippo.ts` now, before the live key exists, would break checkout's shipping-rate step for real visitors (no more silent fallback = an actual auth error at checkout). Agreed with the user to hold that specific change until the live key is confirmed in Vercel, then do both — add the real key and remove the fallback — in the same pass.
+
+### Image uploader fixed — Vercel Blob store was Private, now Public
+
+Separately confirmed and fixed the long-standing item from TODO.md: `src/app/api/admin/upload/route.ts` requests `access: 'public'` on every upload, but the connected Blob store was configured Private. Verified directly via `vercel blob get-store`: **0 files, ever, in 51 days** — every upload attempt had failed since the store was created, not just recently.
+
+Vercel Blob's access level can only be set at store creation, not changed afterward. Fixed by:
+- Creating a new public store, `sacred-hearts-images-public`, via `vercel blob create-store ... --access public --yes`
+- Connecting it to the project, which auto-provisioned `BLOB_READ_WRITE_TOKEN` for Production/Preview/Development
+- Deleting the old empty private store and its now-orphaned env vars (`BLOB_STORE_ID`, `BLOB_WEBHOOK_PUBLIC_KEY`) — confirmed via grep that neither was referenced anywhere in the app code, pure leftover
+- Triggering a fresh production deployment (`vercel deploy --prod`) so the new token is actually live, since already-running serverless functions don't pick up new env vars without a redeploy
+
+No application code changes were needed — the upload route's logic was already correct, it just had nowhere valid to write to. Confirmed with the user beforehand that this change touches nothing else live on the site (checkout, donate, give, contact, admin auth/orders/messages — none of them read Blob env vars). **Not yet confirmed working by the user** — awaiting a real upload attempt in `/admin`.
 
 ---
 
