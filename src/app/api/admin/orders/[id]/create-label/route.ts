@@ -75,6 +75,7 @@ export async function POST(req: NextRequest, { params }: Props) {
     const shipment = await shippoPost('shipments/', buildShipmentBody(order));
     const rates = (shipment.rates || []).filter((r: any) => r.amount && parseFloat(r.amount) > 0);
     if (!rates.length) {
+      console.error('Shippo create-label: no rates returned for order', order.id, JSON.stringify(shipment));
       return NextResponse.json({ error: 'Could not retrieve shipping rates for this address' }, { status: 502 });
     }
     rates.sort((a: any, b: any) => parseFloat(a.amount) - parseFloat(b.amount));
@@ -89,6 +90,7 @@ export async function POST(req: NextRequest, { params }: Props) {
 
   // Saved rate may have expired — retry once with a freshly requested rate
   if (transaction.status !== 'SUCCESS' && order.shippo_rate_id) {
+    console.error('Shippo create-label: first attempt failed for order', order.id, JSON.stringify(transaction));
     const shipment = await shippoPost('shipments/', buildShipmentBody(order));
     const rates = (shipment.rates || []).filter((r: any) => r.amount && parseFloat(r.amount) > 0);
     if (rates.length) {
@@ -102,7 +104,11 @@ export async function POST(req: NextRequest, { params }: Props) {
   }
 
   if (transaction.status !== 'SUCCESS') {
-    return NextResponse.json({ error: transaction.messages || 'Label purchase failed' }, { status: 502 });
+    console.error('Shippo create-label: final failure for order', order.id, JSON.stringify(transaction));
+    const detail = Array.isArray(transaction.messages) && transaction.messages.length > 0
+      ? transaction.messages.map((m: any) => m.text || m.code || JSON.stringify(m)).join('; ')
+      : (transaction.detail || transaction.error || 'Label purchase failed');
+    return NextResponse.json({ error: detail }, { status: 502 });
   }
 
   const updated = await saveLabelToOrder(order.id, {
