@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `${siteUrl}/order-success?session_id={CHECKOUT_SESSION_ID}&type=donation`,
+      success_url: `${siteUrl}/donate/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/donate`,
       billing_address_collection: 'auto',
       metadata: {
