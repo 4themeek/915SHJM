@@ -94,13 +94,13 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Order</th>
-                <th>Date</th>
-                <th>Customer</th>
-                <th>Ship To</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Label / Tracking</th>
+                <th className={styles.th}>Order</th>
+                <th className={styles.th}>Date</th>
+                <th className={styles.th}>Customer</th>
+                <th className={styles.th}>Ship To</th>
+                <th className={styles.th}>Total</th>
+                <th className={styles.th}>Status</th>
+                <th className={styles.th}>Label / Tracking</th>
               </tr>
             </thead>
             <tbody>
