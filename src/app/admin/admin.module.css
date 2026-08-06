@@ -439,6 +439,8 @@
   background: #fff;
   border: 1px solid var(--border);
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 70vh;
 }
 
 .table {
@@ -458,7 +460,7 @@
   background: var(--cream-dark);
   white-space: nowrap;
   position: sticky;
-  top: 60px;
+  top: 0;
   z-index: 10;
 }
 
