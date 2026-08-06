@@ -54,10 +54,10 @@ export default async function HomePage() {
         <div className={styles.heroContent}>
           <div className={styles.logoWrap}>
             <Image
-              src="/logo.png"
+              src="/logo-hero.png"
               alt="The Sacred Hearts"
               width={560}
-              height={280}
+              height={560}
               priority
               className={styles.logo}
             />
