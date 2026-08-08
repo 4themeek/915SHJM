@@ -169,7 +169,18 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
                       <>
                         <a href={order.label_url} target="_blank" rel="noreferrer" className={styles.addBtn}>🖨 Print Label</a>
                         <br />
-                        <span style={{ fontSize: '0.8rem' }}>{order.carrier} — {order.tracking_number}</span>
+                        {order.tracking_url ? (
+                          <a
+                            href={order.tracking_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontSize: '0.8rem', color: 'var(--crimson)', fontWeight: 600 }}
+                          >
+                            📦 Track: {order.carrier} — {order.tracking_number}
+                          </a>
+                        ) : (
+                          <span style={{ fontSize: '0.8rem' }}>{order.carrier} — {order.tracking_number}</span>
+                        )}
                         <br />
                         {order.refund_status ? (
                           <span style={{ fontSize: '0.8rem', color: 'var(--gold-dark)' }}>
