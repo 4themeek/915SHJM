@@ -167,7 +167,7 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
                   <td>
                     {order.label_url ? (
                       <>
-                        <a href={order.label_url} target="_blank" rel="noreferrer">Print Label</a>
+                        <a href={order.label_url} target="_blank" rel="noreferrer" className={styles.addBtn}>🖨 Print Label</a>
                         <br />
                         <span style={{ fontSize: '0.8rem' }}>{order.carrier} — {order.tracking_number}</span>
                         <br />
