@@ -3,14 +3,20 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { DbOrder } from '@/lib/db';
+import { DbOrder, Donation } from '@/lib/db';
 import styles from '../admin.module.css';
 import DonationsNavBadge from '../DonationsNavBadge';
 
 interface Props {
   orders: DbOrder[];
+  donations: Donation[];
   adminEmail: string;
 }
+
+const DONATION_SOURCE_LABELS: Record<string, string> = {
+  donation: 'Online',
+  table_donation: 'Table (QR)',
+};
 
 type RangeKey = '7d' | '30d' | 'ytd';
 
@@ -35,7 +41,7 @@ function cutoffFor(range: RangeKey): Date {
   return new Date(now.getFullYear(), 0, 1);
 }
 
-export default function ReportsClient({ orders, adminEmail }: Props) {
+export default function ReportsClient({ orders, donations, adminEmail }: Props) {
   const [range, setRange] = useState<RangeKey>('7d');
   const router = useRouter();
 
@@ -70,6 +76,16 @@ export default function ReportsClient({ orders, adminEmail }: Props) {
       .map(([code, v]) => ({ code, ...v }))
       .sort((a, b) => b.uses - a.uses);
   }, [filtered]);
+
+  const filteredDonations = useMemo(() => {
+    const cutoff = cutoffFor(range);
+    return donations
+      .filter(d => new Date(d.created_at) >= cutoff)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [donations, range]);
+
+  const totalDonated = filteredDonations.reduce((sum, d) => sum + Number(d.amount), 0);
+  const avgDonation = filteredDonations.length ? totalDonated / filteredDonations.length : 0;
 
   return (
     <div className={styles.dashboard}>
@@ -106,6 +122,7 @@ export default function ReportsClient({ orders, adminEmail }: Props) {
           ))}
         </div>
 
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--ink-soft)', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Orders</h2>
         <div className={styles.statsBar}>
           <div className={styles.statCard}>
             <span className={styles.statNum}>{filtered.length}</span>
@@ -198,6 +215,59 @@ export default function ReportsClient({ orders, adminEmail }: Props) {
           {filtered.length === 0 && (
             <div className={styles.emptyTable}>
               <p>No orders in this range.</p>
+            </div>
+          )}
+        </div>
+
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--ink-soft)', letterSpacing: '0.05em', margin: '2.5rem 0 0.75rem' }}>Donations</h2>
+        <div className={styles.statsBar}>
+          <div className={styles.statCard}>
+            <span className={styles.statNum}>{filteredDonations.length}</span>
+            <span className={styles.statLabel}>Donations</span>
+          </div>
+          <div className={styles.statCard}>
+            <span className={styles.statNum}>${totalDonated.toFixed(2)}</span>
+            <span className={styles.statLabel}>Total Donated</span>
+          </div>
+          <div className={styles.statCard}>
+            <span className={styles.statNum}>${avgDonation.toFixed(2)}</span>
+            <span className={styles.statLabel}>Avg Donation</span>
+          </div>
+        </div>
+
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th className={styles.th}>Date</th>
+                <th className={styles.th}>Donor</th>
+                <th className={styles.th}>Amount</th>
+                <th className={styles.th}>Source</th>
+                <th className={styles.th}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredDonations.map(d => (
+                <tr key={d.id}>
+                  <td style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                    {new Date(d.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </td>
+                  <td>
+                    {d.donor_name || <span style={{ color: 'var(--ink-soft)' }}>—</span>}
+                    <br />
+                    <span style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>{d.donor_email || '—'}</span>
+                  </td>
+                  <td>${Number(d.amount).toFixed(2)}</td>
+                  <td style={{ fontSize: '0.85rem' }}>{DONATION_SOURCE_LABELS[d.source] || d.source}</td>
+                  <td>{d.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {filteredDonations.length === 0 && (
+            <div className={styles.emptyTable}>
+              <p>No donations in this range.</p>
             </div>
           )}
         </div>
