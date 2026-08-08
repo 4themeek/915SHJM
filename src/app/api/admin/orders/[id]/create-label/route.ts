@@ -28,6 +28,13 @@ async function shippoPost(endpoint: string, body: object) {
   return res.json();
 }
 
+async function shippoGet(endpoint: string) {
+  const res = await fetch(`https://api.goshippo.com/${endpoint}`, {
+    headers: { Authorization: `ShippoToken ${SHIPPO_API_KEY}` },
+  });
+  return res.json();
+}
+
 function buildShipmentBody(order: any) {
   return {
     address_from: FROM_ADDRESS,
@@ -82,6 +89,7 @@ export async function POST(req: NextRequest, { params }: Props) {
     rateId = rates[0].object_id;
   }
 
+  let usedRateId = rateId;
   let transaction = await shippoPost('transactions/', {
     rate: rateId,
     label_file_type: 'PDF',
@@ -95,8 +103,9 @@ export async function POST(req: NextRequest, { params }: Props) {
     const rates = (shipment.rates || []).filter((r: any) => r.amount && parseFloat(r.amount) > 0);
     if (rates.length) {
       rates.sort((a: any, b: any) => parseFloat(a.amount) - parseFloat(b.amount));
+      usedRateId = rates[0].object_id;
       transaction = await shippoPost('transactions/', {
-        rate: rates[0].object_id,
+        rate: usedRateId,
         label_file_type: 'PDF',
         async: false,
       });
@@ -111,12 +120,22 @@ export async function POST(req: NextRequest, { params }: Props) {
     return NextResponse.json({ error: detail }, { status: 502 });
   }
 
+  // The transaction response's `rate` field is just the rate ID, not an
+  // expanded object — fetch the rate itself to get the real carrier name.
+  let carrier = 'Unknown';
+  try {
+    const rateDetails = await shippoGet(`rates/${usedRateId}/`);
+    carrier = rateDetails.provider || carrier;
+  } catch (err) {
+    console.error('Shippo create-label: rate lookup failed for order', order.id, err);
+  }
+
   const updated = await saveLabelToOrder(order.id, {
     shippo_transaction_id: transaction.object_id,
     label_url: transaction.label_url,
     tracking_number: transaction.tracking_number,
     tracking_url: transaction.tracking_url_provider || null,
-    carrier: transaction.rate?.provider || 'Unknown',
+    carrier,
   });
 
   return NextResponse.json({ success: true, order: updated });
