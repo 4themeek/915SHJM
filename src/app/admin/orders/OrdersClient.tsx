@@ -35,6 +35,7 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
   const [orders, setOrders] = useState(initialOrders);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState<{ id: number; msg: string } | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const router = useRouter();
 
   async function handleLogout() {
@@ -58,6 +59,14 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
     } finally {
       setBusyId(null);
     }
+  }
+
+  async function handleDelete(id: number) {
+    const res = await fetch(`/api/admin/orders/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setOrders(prev => prev.filter(o => o.id !== id));
+    }
+    setDeleteId(null);
   }
 
   async function voidLabel(id: number) {
@@ -128,7 +137,16 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
             <tbody>
               {orders.map(order => (
                 <tr key={order.id}>
-                  <td style={{ width: '5.5rem' }}>#{order.id}</td>
+                  <td style={{ width: '5.5rem' }}>
+                    #{order.id}
+                    <br />
+                    <button
+                      onClick={() => setDeleteId(order.id)}
+                      style={{ fontSize: '0.7rem', color: '#8B1A1A', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    >
+                      Delete
+                    </button>
+                  </td>
                   <td style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                     {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     <br />
@@ -215,6 +233,22 @@ export default function OrdersClient({ orders: initialOrders, adminEmail }: Prop
           </table>
         </div>
       </div>
+
+      {deleteId !== null && (
+        <>
+          <div className={styles.modalOverlay} onClick={() => setDeleteId(null)} />
+          <div className={styles.modal}>
+            <h3 className={styles.modalTitle}>Delete Order?</h3>
+            <p className={styles.modalText}>
+              This will permanently delete order #{deleteId}. This cannot be undone.
+            </p>
+            <div className={styles.modalBtns}>
+              <button className={styles.modalCancel} onClick={() => setDeleteId(null)}>Cancel</button>
+              <button className={styles.modalDelete} onClick={() => handleDelete(deleteId)}>Delete Permanently</button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

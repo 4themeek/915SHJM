@@ -467,6 +467,10 @@ export async function saveRefundToOrder(id: number, data: {
   return rows[0];
 }
 
+export async function deleteOrder(id: number): Promise<void> {
+  await sql`DELETE FROM orders WHERE id = ${id}`;
+}
+
 // ─────────────────────────────────────────────────────────────
 // CONTACT MESSAGES
 // ─────────────────────────────────────────────────────────────
