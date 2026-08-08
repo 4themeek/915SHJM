@@ -50,7 +50,7 @@ export default function Footer() {
         <p>Copyright © {new Date().getFullYear()} The Sacred Hearts · All Rights Reserved · Cincinnati, Ohio</p>
         <p>Every purchase is a tax-deductible donation · 501(c)3 Nonprofit</p>
         <p className={styles.partnerLink}><a href="https://www.rejectedstones.org" target="_blank" rel="noopener noreferrer">God&apos;s Heart, Our Hands</a></p>
-        <p className={styles.partnerLink}><Link href="/admin">Admin</Link></p>
+        <p className={styles.adminLink}><Link href="/admin">Admin</Link></p>
       </div>
     </footer>
   );
