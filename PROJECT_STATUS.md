@@ -1,6 +1,6 @@
 # Sacred Hearts (915SHJM) — Project Status
 
-**Last updated:** August 6, 2026 (sticky orders table header; new Donations Rec'd admin panel — donations no longer land in the orders table)
+**Last updated:** August 7, 2026 (live Shippo key confirmed, hardcoded test-key fallback removed)
 **Repo:** github.com/4themeek/915SHJM (main branch, auto-deploys to Vercel)
 **Live site:** https://www.thesacredhearts.org
 **Stack:** Next.js 15, @vercel/postgres (Neon-backed), Stripe, Shippo, Vercel Blob (unused/private — see below)
@@ -268,7 +268,7 @@ This also explained something that looked fine but wasn't: `src/lib/shippo.ts` h
 
 Improved `create-label/route.ts` to log Shippo's full raw response server-side on failure (previously swallowed — only a generic "Label purchase failed" was ever shown, with nothing to diagnose from). User requested a live Shippo key; Shippo said 2-3 hours to issue.
 
-**Deliberately held for later:** removing the hardcoded test-key fallback from `shippo.ts` now, before the live key exists, would break checkout's shipping-rate step for real visitors (no more silent fallback = an actual auth error at checkout). Agreed with the user to hold that specific change until the live key is confirmed in Vercel, then do both — add the real key and remove the fallback — in the same pass.
+**Resolved (Aug 7 2026):** the live `SHIPPO_API_KEY` is now set in Vercel and confirmed by the user. The hardcoded test-key fallback in `shippo.ts` (`|| 'shippo_test_...'`) has been removed (`|| ''` instead) — checkout's shipping-rate quotes and `create-label` both now run against the real Shippo account, no test-mode fallback left. **Not yet confirmed live:** clicking "Create Label" on the existing test order to verify a real label/tracking number comes back.
 
 ### Image uploader fixed — Vercel Blob store was Private, now Public
 
