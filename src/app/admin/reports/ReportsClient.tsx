@@ -159,6 +159,7 @@ export default function ReportsClient({ orders, adminEmail }: Props) {
                 <th className={styles.th} style={{ width: '5.5rem' }}>Order</th>
                 <th className={styles.th}>Date</th>
                 <th className={styles.th}>Customer</th>
+                <th className={styles.th}>Total before Promo</th>
                 <th className={styles.th}>Total</th>
                 <th className={styles.th}>Promo Code</th>
                 <th className={styles.th}>Status</th>
@@ -175,6 +176,7 @@ export default function ReportsClient({ orders, adminEmail }: Props) {
                     {order.customer_name}<br />
                     <span style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>{order.customer_email}</span>
                   </td>
+                  <td>${(Number(order.amount_total) + Number(order.promo_discount || 0)).toFixed(2)}</td>
                   <td>${Number(order.amount_total).toFixed(2)}</td>
                   <td style={{ fontSize: '0.8rem' }}>
                     {order.promo_code ? (
