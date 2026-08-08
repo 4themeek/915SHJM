@@ -1,4 +1,4 @@
-const SHIPPO_API_KEY = process.env.SHIPPO_API_KEY || 'shippo_test_dc2753f1272bcb293a8c5285e44346b46a79a665';
+const SHIPPO_API_KEY = process.env.SHIPPO_API_KEY || '';
 
 export const SHIPPO_FROM_ADDRESS = {
   name: 'The Sacred Hearts',
