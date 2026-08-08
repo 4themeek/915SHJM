@@ -54,6 +54,23 @@ export default function ReportsClient({ orders, adminEmail }: Props) {
   const totalRevenue = filtered.reduce((sum, o) => sum + Number(o.amount_total), 0);
   const avgOrder = filtered.length ? totalRevenue / filtered.length : 0;
 
+  const promoOrders = filtered.filter(o => o.promo_code);
+  const totalDiscount = promoOrders.reduce((sum, o) => sum + Number(o.promo_discount || 0), 0);
+
+  const promoBreakdown = useMemo(() => {
+    const map = new Map<string, { uses: number; discount: number }>();
+    for (const o of filtered) {
+      if (!o.promo_code) continue;
+      const entry = map.get(o.promo_code) || { uses: 0, discount: 0 };
+      entry.uses += 1;
+      entry.discount += Number(o.promo_discount || 0);
+      map.set(o.promo_code, entry);
+    }
+    return Array.from(map.entries())
+      .map(([code, v]) => ({ code, ...v }))
+      .sort((a, b) => b.uses - a.uses);
+  }, [filtered]);
+
   return (
     <div className={styles.dashboard}>
       <div className={styles.dashHeader}>
@@ -102,7 +119,38 @@ export default function ReportsClient({ orders, adminEmail }: Props) {
             <span className={styles.statNum}>${avgOrder.toFixed(2)}</span>
             <span className={styles.statLabel}>Avg Order Value</span>
           </div>
+          <div className={styles.statCard}>
+            <span className={styles.statNum}>{promoOrders.length}</span>
+            <span className={styles.statLabel}>Promo Redemptions</span>
+          </div>
+          <div className={styles.statCard}>
+            <span className={styles.statNum}>${totalDiscount.toFixed(2)}</span>
+            <span className={styles.statLabel}>Discounts Given</span>
+          </div>
         </div>
+
+        {promoBreakdown.length > 0 && (
+          <div className={styles.tableWrap} style={{ marginBottom: '1.5rem' }}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th className={styles.th}>Promo Code</th>
+                  <th className={styles.th}>Redemptions</th>
+                  <th className={styles.th}>Total Discount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {promoBreakdown.map(p => (
+                  <tr key={p.code}>
+                    <td style={{ fontFamily: 'var(--font-display)', fontSize: '0.8rem', letterSpacing: '0.05em' }}>{p.code}</td>
+                    <td>{p.uses}</td>
+                    <td>${p.discount.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <div className={styles.tableWrap}>
           <table className={styles.table}>
@@ -112,6 +160,7 @@ export default function ReportsClient({ orders, adminEmail }: Props) {
                 <th className={styles.th}>Date</th>
                 <th className={styles.th}>Customer</th>
                 <th className={styles.th}>Total</th>
+                <th className={styles.th}>Promo Code</th>
                 <th className={styles.th}>Status</th>
               </tr>
             </thead>
@@ -127,6 +176,17 @@ export default function ReportsClient({ orders, adminEmail }: Props) {
                     <span style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>{order.customer_email}</span>
                   </td>
                   <td>${Number(order.amount_total).toFixed(2)}</td>
+                  <td style={{ fontSize: '0.8rem' }}>
+                    {order.promo_code ? (
+                      <>
+                        {order.promo_code}
+                        <br />
+                        <span style={{ color: 'var(--gold-dark)' }}>−${Number(order.promo_discount).toFixed(2)}</span>
+                      </>
+                    ) : (
+                      <span style={{ color: 'var(--ink-soft)' }}>—</span>
+                    )}
+                  </td>
                   <td>{order.status}</td>
                 </tr>
               ))}
