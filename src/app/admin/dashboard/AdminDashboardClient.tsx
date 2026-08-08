@@ -126,6 +126,7 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
           <Link href="/admin/donations" className={styles.dashViewSite}><span style={{ color: '#16a34a' }}>$</span> Donations Rec&apos;d<DonationsNavBadge /></Link>
           <Link href="/admin/messages" className={styles.dashViewSite}>✉ Messages</Link>
           <Link href="/admin/settings" className={styles.dashViewSite}>⚙ Settings</Link>
+          <Link href="/admin/reports" className={styles.dashViewSite}>📊 Reports</Link>
           <Link href="/" className={styles.dashViewSite} target="_blank">View Site ↗</Link>
           <button className={styles.dashLogout} onClick={handleLogout}>Sign Out</button>
         </div>
