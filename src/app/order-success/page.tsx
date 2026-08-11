@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import ClearCartOnLoad from './ClearCartOnLoad';
 
 export const metadata: Metadata = { title: 'Order Confirmed' };
 
 export default function OrderSuccessPage() {
   return (
     <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '4rem 2rem' }}>
+      <ClearCartOnLoad />
       <div style={{ maxWidth: '600px' }}>
         <p style={{ fontFamily: 'var(--font-display)', color: 'var(--gold)', fontSize: '2rem', marginBottom: '1rem' }}>✦</p>
         <h1 style={{ fontFamily: 'var(--font-display)', color: 'var(--crimson)', fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', letterSpacing: '0.05em', marginBottom: '1rem' }}>

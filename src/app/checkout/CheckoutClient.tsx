@@ -52,7 +52,7 @@ const US_STATES = [
 type Step = 'address' | 'shipping' | 'review';
 
 export default function CheckoutClient() {
-  const { cart, cartTotal, clearCart } = useCart();
+  const { cart, cartTotal } = useCart();
   const [step, setStep] = useState<Step>('address');
   const [address, setAddress] = useState<Address>(EMPTY_ADDRESS);
   const [errors, setErrors] = useState<Partial<Address>>({});
