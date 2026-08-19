@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DbProduct } from '@/lib/db';
 import styles from '../admin.module.css';
-import DonationsNavBadge from '../DonationsNavBadge';
+import NavCountBadge from '../NavCountBadge';
 
 interface Props {
   products: DbProduct[];
@@ -122,9 +122,9 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
           <span className={styles.dashEmail}>{adminEmail}</span>
         </div>
         <div className={styles.dashHeaderRight}>
-          <Link href="/admin/orders" className={styles.dashViewSite}>📦 Orders</Link>
-          <Link href="/admin/donations" className={styles.dashViewSite}><span style={{ color: '#16a34a' }}>$</span> Donations Rec&apos;d<DonationsNavBadge /></Link>
-          <Link href="/admin/messages" className={styles.dashViewSite}>✉ Messages</Link>
+          <Link href="/admin/orders" className={styles.dashViewSite}>📦 Orders<NavCountBadge endpoint="/api/admin/orders/awaiting-count" /></Link>
+          <Link href="/admin/donations" className={styles.dashViewSite}><span style={{ color: '#16a34a' }}>$</span> Donations Rec&apos;d<NavCountBadge endpoint="/api/admin/donations/unread-count" /></Link>
+          <Link href="/admin/messages" className={styles.dashViewSite}>✉ Messages<NavCountBadge endpoint="/api/admin/messages/unread-count" /></Link>
           <Link href="/admin/settings" className={styles.dashViewSite}>⚙ Settings</Link>
           <Link href="/admin/reports" className={styles.dashViewSite}>📊 Reports</Link>
           <Link href="/" className={styles.dashViewSite} target="_blank">View Site ↗</Link>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Donation } from '@/lib/db';
 import styles from '../admin.module.css';
+import NavCountBadge from '../NavCountBadge';
 
 interface Props {
   donations: Donation[];
@@ -54,8 +55,8 @@ export default function DonationsClient({ donations, adminEmail }: Props) {
         </div>
         <div className={styles.dashHeaderRight}>
           <Link href="/admin/dashboard" className={styles.dashViewSite}>← Products</Link>
-          <Link href="/admin/orders" className={styles.dashViewSite}>📦 Orders</Link>
-          <Link href="/admin/messages" className={styles.dashViewSite}>✉ Messages</Link>
+          <Link href="/admin/orders" className={styles.dashViewSite}>📦 Orders<NavCountBadge endpoint="/api/admin/orders/awaiting-count" /></Link>
+          <Link href="/admin/messages" className={styles.dashViewSite}>✉ Messages<NavCountBadge endpoint="/api/admin/messages/unread-count" /></Link>
           <Link href="/admin/settings" className={styles.dashViewSite}>⚙ Settings</Link>
           <Link href="/admin/reports" className={styles.dashViewSite}>📊 Reports</Link>
           <Link href="/" className={styles.dashViewSite} target="_blank">View Site ↗</Link>

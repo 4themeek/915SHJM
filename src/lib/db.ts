@@ -429,6 +429,11 @@ export async function getOrderById(id: number): Promise<DbOrder | null> {
   return rows[0] || null;
 }
 
+export async function getOrdersAwaitingLabelCount(): Promise<number> {
+  const { rows } = await sql`SELECT COUNT(*)::int AS count FROM orders WHERE status = 'paid'`;
+  return (rows[0] as any)?.count ?? 0;
+}
+
 export async function saveLabelToOrder(id: number, data: {
   shippo_transaction_id: string;
   label_url: string;
@@ -522,6 +527,11 @@ export async function getAllContactMessages(): Promise<ContactMessage[]> {
 
 export async function markContactMessageRead(id: number, read: boolean): Promise<void> {
   await sql`UPDATE contact_messages SET read = ${read} WHERE id = ${id}`;
+}
+
+export async function getUnreadMessageCount(): Promise<number> {
+  const { rows } = await sql`SELECT COUNT(*)::int AS count FROM contact_messages WHERE read = false`;
+  return (rows[0] as any)?.count ?? 0;
 }
 
 export async function deleteContactMessage(id: number): Promise<void> {
