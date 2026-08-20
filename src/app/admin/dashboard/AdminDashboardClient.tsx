@@ -237,7 +237,13 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
                         <p className={styles.productName}>{product.name}</p>
                         <p className={styles.productDesc}>{product.desc?.substring(0, 60)}…</p>
                       </td>
-                      <td className={styles.td}><span className={styles.catBadge}>{product.cat}</span></td>
+                      <td className={styles.td}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                          {(product.categories?.length ? product.categories : [product.cat]).map(c => (
+                            <span key={c} className={styles.catBadge}>{c}</span>
+                          ))}
+                        </div>
+                      </td>
                       <td className={styles.td}>
                         <p className={styles.priceText}>{product.price}</p>
                         <p className={styles.priceFrom}>from ${product.start_price}</p>
