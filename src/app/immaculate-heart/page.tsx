@@ -293,6 +293,34 @@ export default function ImmaculateHeartPage() {
         </div>
       </section>
 
+      {/* SAINT JOHN EUDES */}
+      <div className="content-block" style={{ maxWidth: '860px' }}>
+        <h2>Saint John Eudes and Devotion to the Sacred Hearts</h2>
+        <p>
+          Saint John Eudes (1601–1680), a French priest and founder of the Congregation of Jesus and
+          Mary (Eudists), is honored by the Church as the Father of the liturgical worship of the
+          Sacred Hearts of Jesus and Mary. Long before these devotions became widespread, Eudes
+          composed the first liturgical Masses and Offices in their honor — for the Heart of Mary in
+          1648, and for the Heart of Jesus in 1668 — laying the theological and liturgical groundwork
+          that would later shape universal Church practice.
+        </p>
+        <p>
+          For Eudes, the &ldquo;Sacred Hearts&rdquo; were never two separate devotions but one united
+          reality: the Heart of Jesus and the Heart of Mary joined inseparably in love, sorrow, and
+          mission. He taught that contemplating Christ&apos;s Heart draws the faithful into deeper union
+          with His love and sacrifice, while Mary&apos;s Heart — pierced alongside her Son&apos;s — models
+          perfect compassion, faith, and surrender to God&apos;s will.
+        </p>
+        <p>
+          Eudes preached this devotion tirelessly across France through missions and retreats,
+          insisting it was not sentimental piety but a call to conversion: to let one&apos;s own heart be
+          transformed into the likeness of Jesus and Mary&apos;s. His work profoundly influenced later
+          saints, including St. Margaret Mary Alacoque, and helped establish the Sacred Heart devotion
+          as a cornerstone of Catholic spirituality. He was canonized in 1925, and his feast day is
+          celebrated on August 19.
+        </p>
+      </div>
+
       {/* FIVE FIRST SATURDAYS */}
       <div className="content-block" style={{ maxWidth: '860px' }}>
         <h2>How to Honor the Immaculate Heart Today</h2>
