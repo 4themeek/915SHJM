@@ -10,16 +10,20 @@ import NavCountBadge from '../NavCountBadge';
 
 interface Props {
   freeShippingThreshold: string;
+  packagingHandlingFee: string;
   promoCodes: PromoCode[];
   adminEmail: string;
   maintenanceMode: boolean;
 }
 
-export default function AdminSettingsClient({ freeShippingThreshold, promoCodes: initialCodes, adminEmail, maintenanceMode }: Props) {
+export default function AdminSettingsClient({ freeShippingThreshold, packagingHandlingFee, promoCodes: initialCodes, adminEmail, maintenanceMode }: Props) {
   const router = useRouter();
   const [threshold, setThreshold] = useState(freeShippingThreshold);
   const [savingThreshold, setSavingThreshold] = useState(false);
   const [thresholdMsg, setThresholdMsg] = useState('');
+  const [handlingFee, setHandlingFee] = useState(packagingHandlingFee);
+  const [savingHandlingFee, setSavingHandlingFee] = useState(false);
+  const [handlingFeeMsg, setHandlingFeeMsg] = useState('');
   const [promoCodes, setPromoCodes] = useState(initialCodes);
   const [maintenanceOn, setMaintenanceOn] = useState(maintenanceMode);
   const [savingMaintenance, setSavingMaintenance] = useState(false);
@@ -73,6 +77,22 @@ export default function AdminSettingsClient({ freeShippingThreshold, promoCodes:
       else setThresholdMsg('❌ Error: ' + data.error);
     } catch { setThresholdMsg('❌ Network error'); }
     finally { setSavingThreshold(false); }
+  }
+
+  async function saveHandlingFee() {
+    setSavingHandlingFee(true);
+    setHandlingFeeMsg('');
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packaging_handling_fee: handlingFee }),
+      });
+      const data = await res.json();
+      if (data.success) setHandlingFeeMsg('✦ Saved successfully');
+      else setHandlingFeeMsg('❌ Error: ' + data.error);
+    } catch { setHandlingFeeMsg('❌ Network error'); }
+    finally { setSavingHandlingFee(false); }
   }
 
   async function savePromoCode() {
@@ -188,6 +208,34 @@ export default function AdminSettingsClient({ freeShippingThreshold, promoCodes:
           {thresholdMsg && <p className={settingsStyles.msg}>{thresholdMsg}</p>}
           <p className={settingsStyles.hint}>
             Currently: orders over <strong>${threshold}</strong> get free shipping automatically
+          </p>
+        </div>
+
+        {/* PACKAGING & HANDLING FEE */}
+        <div className={settingsStyles.section}>
+          <h2 className={settingsStyles.sectionTitle}>Packaging &amp; Handling Fee</h2>
+          <p className={settingsStyles.sectionDesc}>
+            A fixed fee added to every order at checkout, separate from and unaffected by free
+            shipping. Range: $0.00–$10.00.
+          </p>
+          <div className={settingsStyles.thresholdRow}>
+            <span className={settingsStyles.dollarSign}>$</span>
+            <input
+              type="number"
+              min="0"
+              max="10"
+              step="0.01"
+              className={settingsStyles.thresholdInput}
+              value={handlingFee}
+              onChange={e => setHandlingFee(e.target.value)}
+            />
+            <button className={settingsStyles.saveBtn} onClick={saveHandlingFee} disabled={savingHandlingFee}>
+              {savingHandlingFee ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+          {handlingFeeMsg && <p className={settingsStyles.msg}>{handlingFeeMsg}</p>}
+          <p className={settingsStyles.hint}>
+            Currently: <strong>${Number(handlingFee).toFixed(2)}</strong> is added to every order
           </p>
         </div>
 

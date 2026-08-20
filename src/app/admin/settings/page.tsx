@@ -13,11 +13,13 @@ export default async function AdminSettingsPage() {
   await createPromoCodesTable();
 
   const threshold = await getSetting('free_shipping_threshold') || '50';
+  const packagingHandlingFee = await getSetting('packaging_handling_fee') || '3.25';
   const promoCodes = await getAllPromoCodes();
   const maintenanceMode = (await getSetting('shop_maintenance_mode')) === 'true';
 
   return <AdminSettingsClient
     freeShippingThreshold={threshold}
+    packagingHandlingFee={packagingHandlingFee}
     promoCodes={promoCodes}
     adminEmail={session}
     maintenanceMode={maintenanceMode}

@@ -36,11 +36,6 @@ interface AddressCorrection {
   zip: string;
 }
 
-// Fixed per-order fee, applied after shipping and never affected by the
-// free-shipping threshold or promo discounts — mirrored server-side in
-// /api/checkout, which is the actual source of truth for what's charged.
-const PACKAGING_HANDLING_FEE = 3.25;
-
 const EMPTY_ADDRESS: Address = {
   name: '', email: '', phone: '',
   street1: '', street2: '',
@@ -74,11 +69,17 @@ export default function CheckoutClient() {
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(50);
+  // Fixed per-order fee, applied after shipping and never affected by the
+  // free-shipping threshold or promo discounts — mirrored server-side in
+  // /api/checkout, which is the actual source of truth for what's charged.
+  // Admin-configurable ($0–$10), fetched alongside the shipping threshold below.
+  const [packagingHandlingFee, setPackagingHandlingFee] = useState<number>(3.25);
 
-  // Load free shipping threshold on mount
+  // Load free shipping threshold and packaging fee on mount
   useState(() => {
     fetch('/api/admin/settings').then(r => r.json()).then(d => {
       if (d.free_shipping_threshold) setFreeShippingThreshold(parseFloat(d.free_shipping_threshold));
+      if (d.packaging_handling_fee) setPackagingHandlingFee(parseFloat(d.packaging_handling_fee));
     }).catch(() => {});
   });
 
@@ -107,7 +108,7 @@ export default function CheckoutClient() {
       : Math.min(promoApplied.value, promoDiscountBase)
     : 0;
 
-  const orderTotal = cartTotal - promoDiscount + effectiveShipping + PACKAGING_HANDLING_FEE;
+  const orderTotal = cartTotal - promoDiscount + effectiveShipping + packagingHandlingFee;
 
   function updateAddress(field: keyof Address, value: string) {
     setAddress(prev => ({ ...prev, [field]: value }));
@@ -569,7 +570,7 @@ export default function CheckoutClient() {
                 )}
                 <div className={styles.totalRow}>
                   <span>Packaging &amp; Handling</span>
-                  <span>${PACKAGING_HANDLING_FEE.toFixed(2)}</span>
+                  <span>${packagingHandlingFee.toFixed(2)}</span>
                 </div>
                 <div className={`${styles.totalRow} ${styles.grandTotal}`}>
                   <span>Total</span>
@@ -627,7 +628,7 @@ export default function CheckoutClient() {
               </div>
               <div className={styles.summaryRow}>
                 <span>Packaging &amp; Handling</span>
-                <span>${PACKAGING_HANDLING_FEE.toFixed(2)}</span>
+                <span>${packagingHandlingFee.toFixed(2)}</span>
               </div>
               <div className={`${styles.summaryRow} ${styles.summaryGrand}`}>
                 <span>Total</span>
