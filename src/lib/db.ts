@@ -4,6 +4,7 @@ export interface DbProduct {
   id: number;
   name: string;
   cat: string;
+  categories: string[] | null;
   price: string;
   start_price: number;
   img: string;
@@ -19,12 +20,25 @@ export interface DbProduct {
   updated_at: string;
 }
 
+// Cleans a raw categories payload down to at most 5 unique, non-empty
+// strings. `cat` (the legacy primary category) is used as the fallback if
+// nothing valid comes through.
+export function sanitizeCategories(raw: unknown, fallbackCat?: string): string[] {
+  const list = Array.isArray(raw) ? raw : [];
+  const cleaned = Array.from(new Set(
+    list.map(c => String(c).trim()).filter(Boolean)
+  )).slice(0, 5);
+  if (cleaned.length === 0 && fallbackCat) return [fallbackCat];
+  return cleaned;
+}
+
 export async function createProductsTable() {
   await sql`
     CREATE TABLE IF NOT EXISTS products (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
       cat TEXT NOT NULL,
+      categories TEXT[] NOT NULL DEFAULT '{}',
       price TEXT NOT NULL,
       start_price NUMERIC(10,2) NOT NULL DEFAULT 0,
       img TEXT NOT NULL DEFAULT '',
@@ -65,8 +79,8 @@ export async function getProductById(id: number): Promise<DbProduct | null> {
 
 export async function createProduct(data: Omit<DbProduct, 'id' | 'created_at' | 'updated_at'>): Promise<DbProduct> {
   const { rows } = await sql<DbProduct>`
-    INSERT INTO products (name, cat, price, start_price, img, "desc", sale, sale_price, sale_ends_at, out_of_stock, is_free, weight_oz, active)
-    VALUES (${data.name}, ${data.cat}, ${data.price}, ${data.start_price}, ${data.img}, ${data.desc},
+    INSERT INTO products (name, cat, categories, price, start_price, img, "desc", sale, sale_price, sale_ends_at, out_of_stock, is_free, weight_oz, active)
+    VALUES (${data.name}, ${data.cat}, ${(data.categories ?? [data.cat]) as any}, ${data.price}, ${data.start_price}, ${data.img}, ${data.desc},
             ${data.sale}, ${data.sale_price ?? null}, ${data.sale_ends_at ?? null},
             ${data.out_of_stock}, ${data.is_free}, ${data.weight_oz}, ${data.active})
     RETURNING *
@@ -88,6 +102,7 @@ export async function updateProduct(id: number, data: Partial<Omit<DbProduct, 'i
     UPDATE products SET
       name        = COALESCE(${data.name ?? null}, name),
       cat         = COALESCE(${data.cat ?? null}, cat),
+      categories  = COALESCE(${(data.categories ?? null) as any}, categories),
       price       = COALESCE(${data.price ?? null}, price),
       start_price = COALESCE(${data.start_price ?? null}, start_price),
       img         = COALESCE(${data.img ?? null}, img),
@@ -118,8 +133,8 @@ export async function seedProducts(products: any[]): Promise<void> {
 
   for (const p of products) {
     await sql`
-      INSERT INTO products (name, cat, price, start_price, img, "desc", sale, out_of_stock, is_free, weight_oz, active)
-      VALUES (${p.name}, ${p.cat}, ${p.price}, ${p.startPrice}, ${p.img}, ${p.desc},
+      INSERT INTO products (name, cat, categories, price, start_price, img, "desc", sale, out_of_stock, is_free, weight_oz, active)
+      VALUES (${p.name}, ${p.cat}, ${[p.cat] as any}, ${p.price}, ${p.startPrice}, ${p.img}, ${p.desc},
               ${p.sale ?? false}, ${p.outOfStock ?? false}, ${p.isFree ?? false}, ${p.weightOz ?? 8}, true)
       ON CONFLICT (name) DO UPDATE SET
         cat         = EXCLUDED.cat,
@@ -183,6 +198,10 @@ export async function applyGlobalSaleDateToAllSaleItems(date: string | null): Pr
 export async function runMigrations() {
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_price NUMERIC(10,2) DEFAULT NULL`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_ends_at TIMESTAMPTZ DEFAULT NULL`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS categories TEXT[] NOT NULL DEFAULT '{}'`;
+  // Backfill: existing rows predate the categories column — seed it from
+  // their single `cat` value so multi-category filtering works immediately.
+  await sql`UPDATE products SET categories = ARRAY[cat] WHERE categories = '{}' AND cat IS NOT NULL`;
 }
 
 // ── SETTINGS TABLE ────────────────────────────────────────────

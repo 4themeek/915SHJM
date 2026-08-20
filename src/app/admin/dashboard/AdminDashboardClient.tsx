@@ -23,10 +23,10 @@ export default function AdminDashboardClient({ products: initialProducts, adminE
   const [clearingSales, setClearingSales] = useState(false);
   const router = useRouter();
 
-  const categories = ['All', ...Array.from(new Set(products.map(p => p.cat)))];
+  const categories = ['All', ...Array.from(new Set(products.flatMap(p => p.categories?.length ? p.categories : [p.cat])))];
 
   const filtered = products.filter(p => {
-    const matchCat = catFilter === 'All' || p.cat === catFilter;
+    const matchCat = catFilter === 'All' || (p.categories?.length ? p.categories : [p.cat]).includes(catFilter);
     const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });

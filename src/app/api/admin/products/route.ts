@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/auth';
-import { getAllProductsAdmin, createProduct, createProductsTable, runMigrations } from '@/lib/db';
+import { getAllProductsAdmin, createProduct, createProductsTable, runMigrations, sanitizeCategories } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   const session = await getAdminSession();
@@ -23,9 +23,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const data = await req.json();
+    const categories = sanitizeCategories(data.categories, data.cat);
     const product = await createProduct({
       name: data.name,
-      cat: data.cat,
+      cat: categories[0] || data.cat,
+      categories,
       price: data.price,
       start_price: parseFloat(data.start_price) || 0,
       img: data.img || '',

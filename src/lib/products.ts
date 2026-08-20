@@ -10,6 +10,7 @@ export interface Product {
   id: number;
   name: string;
   cat: string;
+  categories?: string[];
   price: string;
   startPrice: number;
   img: string;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/auth';
-import { getProductById, updateProduct, deleteProduct, runMigrations } from '@/lib/db';
+import { getProductById, updateProduct, deleteProduct, runMigrations, sanitizeCategories } from '@/lib/db';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -31,6 +31,11 @@ export async function PUT(req: NextRequest, { params }: Props) {
     // Strings
     if (data.name !== undefined)  sanitized.name  = String(data.name);
     if (data.cat !== undefined)   sanitized.cat   = String(data.cat);
+    if (data.categories !== undefined) {
+      const categories = sanitizeCategories(data.categories, sanitized.cat ?? data.cat);
+      sanitized.categories = categories;
+      if (categories[0]) sanitized.cat = categories[0];
+    }
     if (data.price !== undefined) sanitized.price = String(data.price);
     if (data.img !== undefined)   sanitized.img   = String(data.img);
     if (data.desc !== undefined)  sanitized.desc  = String(data.desc);

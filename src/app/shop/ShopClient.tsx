@@ -14,7 +14,9 @@ export default function ShopClient({ products, categories }: Props) {
   const [activeFilter, setActiveFilter] = useState('All');
 
   const filtered =
-    activeFilter === 'All' ? products : products.filter((p) => p.cat === activeFilter);
+    activeFilter === 'All'
+      ? products
+      : products.filter((p) => (p.categories?.length ? p.categories : [p.cat]).includes(activeFilter));
 
   return (
     <section className="section">

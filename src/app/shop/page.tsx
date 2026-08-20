@@ -29,6 +29,7 @@ export default async function ShopPage() {
           id: p.id,
           name: p.name,
           cat: p.cat,
+          categories: p.categories && p.categories.length ? p.categories : [p.cat],
           price: p.price,
           startPrice: Number(p.start_price),
           img: p.img,
@@ -40,7 +41,7 @@ export default async function ShopPage() {
           isFree: p.is_free,
           weight_oz: p.weight_oz,
         }));
-      categories = ['All', ...Array.from(new Set(products.map(p => p.cat)))];
+      categories = ['All', ...Array.from(new Set(products.flatMap(p => p.categories)))];
     } else {
       // Fallback to static products if DB is empty
       products = PRODUCTS;

@@ -21,7 +21,8 @@ export default async function EditProductPage({ params }: Props) {
     let categories = ['All'];
     try {
       const products = await getAllProductsAdmin();
-      categories = ['All', ...Array.from(new Set(products.map(p => p.cat)))];
+      const allCats = products.flatMap(p => p.categories && p.categories.length ? p.categories : [p.cat]);
+      categories = ['All', ...Array.from(new Set(allCats))];
     } catch {}
 
     // Serialize dates to strings so they're safe to pass to client components

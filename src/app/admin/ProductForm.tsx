@@ -11,8 +11,10 @@ interface Props {
   categories: string[];
 }
 
+const MAX_CATEGORIES = 5;
+
 const EMPTY_FORM = {
-  name: '', cat: '', price: '', start_price: '',
+  name: '', categories: [] as string[], price: '', start_price: '',
   img: '', desc: '', sale: false, out_of_stock: false,
   is_free: false, weight_oz: '8', active: true,
   sale_price: '', sale_ends_at: '',
@@ -27,7 +29,9 @@ export default function ProductForm({ product, categories }: Props) {
     try {
       return {
         name: product.name || '',
-        cat: product.cat || '',
+        categories: product.categories && product.categories.length
+          ? product.categories
+          : (product.cat ? [product.cat] : []),
         price: product.price || '',
         start_price: product.start_price != null ? String(product.start_price) : '',
         img: product.img || '',
@@ -58,6 +62,25 @@ export default function ProductForm({ product, categories }: Props) {
     setForm(prev => ({ ...prev, [field]: value }));
   }
 
+  function toggleCategory(c: string) {
+    setForm(prev => {
+      const has = prev.categories.includes(c);
+      if (has) return { ...prev, categories: prev.categories.filter(x => x !== c) };
+      if (prev.categories.length >= MAX_CATEGORIES) return prev;
+      return { ...prev, categories: [...prev.categories, c] };
+    });
+  }
+
+  function addNewCategory() {
+    const trimmed = newCat.trim();
+    if (!trimmed) return;
+    setForm(prev => {
+      if (prev.categories.includes(trimmed) || prev.categories.length >= MAX_CATEGORIES) return prev;
+      return { ...prev, categories: [...prev.categories, trimmed] };
+    });
+    setNewCat('');
+  }
+
   async function applyGlobalSaleDate() {
     if (!globalSaleDate) return;
     setSaleMsg('Applying...');
@@ -79,13 +102,25 @@ export default function ProductForm({ product, categories }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // A category typed into the "create new" field but never explicitly
+    // added is still what the admin intended to select — fold it in now.
+    const categories = newCat.trim() && !form.categories.includes(newCat.trim()) && form.categories.length < MAX_CATEGORIES
+      ? [...form.categories, newCat.trim()]
+      : form.categories;
+
+    if (categories.length === 0) {
+      setError('Select at least one category');
+      return;
+    }
+
     setSaving(true);
     setError('');
 
     // Build payload explicitly — no spread to avoid override issues
     const payload = {
-      name: newCat.trim() ? form.name : form.name,
-      cat: newCat.trim() || form.cat,
+      name: form.name,
+      categories,
       price: form.price,
       start_price: parseFloat(form.start_price) || 0,
       img: form.img,
@@ -158,24 +193,47 @@ export default function ProductForm({ product, categories }: Props) {
                   value={form.name} onChange={e => update('name', e.target.value)} />
               </div>
 
-              {/* CATEGORY */}
-              <div className={styles.formGroup}>
-                <label className={styles.label}>Category *</label>
-                <select className={styles.input} value={form.cat}
-                  onChange={e => update('cat', e.target.value)}>
-                  <option value="">Select category…</option>
-                  {categories.filter(c => c !== 'All').map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+              {/* CATEGORIES */}
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                <label className={styles.label}>
+                  Categories * <span className={styles.fieldHint} style={{ display: 'inline' }}>
+                    (choose up to {MAX_CATEGORIES} — {form.categories.length}/{MAX_CATEGORIES} selected)
+                  </span>
+                </label>
+                <div className={styles.toggleRow}>
+                  {categories.filter(c => c !== 'All').map(c => {
+                    const checked = form.categories.includes(c);
+                    const disabled = !checked && form.categories.length >= MAX_CATEGORIES;
+                    return (
+                      <label key={c} className={styles.toggle} style={disabled ? { opacity: 0.45 } : undefined}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={disabled}
+                          onChange={() => toggleCategory(c)}
+                        />
+                        <span className={styles.toggleLabel}>{c}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* NEW CATEGORY */}
               <div className={styles.formGroup}>
                 <label className={styles.label}>Or Create New Category</label>
-                <input className={styles.input} type="text"
-                  placeholder="e.g. Saints, Marian…"
-                  value={newCat} onChange={e => setNewCat(e.target.value)} />
+                <div className={styles.globalSaleRow}>
+                  <input className={styles.input} type="text"
+                    placeholder="e.g. Saints, Marian…"
+                    value={newCat}
+                    onChange={e => setNewCat(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addNewCategory(); } }} />
+                  <button type="button" className={styles.globalSaleBtn}
+                    onClick={addNewCategory}
+                    disabled={!newCat.trim() || form.categories.length >= MAX_CATEGORIES}>
+                    Add
+                  </button>
+                </div>
               </div>
 
               {/* PRICE DISPLAY */}

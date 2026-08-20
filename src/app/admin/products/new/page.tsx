@@ -10,7 +10,8 @@ export default async function NewProductPage() {
   let categories = ['All'];
   try {
     const products = await getAllProductsAdmin();
-    categories = ['All', ...Array.from(new Set(products.map(p => p.cat)))];
+    const allCats = products.flatMap(p => p.categories && p.categories.length ? p.categories : [p.cat]);
+    categories = ['All', ...Array.from(new Set(allCats))];
   } catch {}
 
   return <ProductForm categories={categories} />;
