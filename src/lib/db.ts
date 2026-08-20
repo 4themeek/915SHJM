@@ -351,6 +351,7 @@ export interface DbOrder {
   refund_status: string | null;
   promo_code: string | null;
   promo_discount: number | null;
+  viewed: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -385,6 +386,7 @@ export async function createOrdersTable() {
       refund_status TEXT,
       promo_code TEXT,
       promo_discount NUMERIC(10,2),
+      viewed BOOLEAN NOT NULL DEFAULT false,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
@@ -392,6 +394,16 @@ export async function createOrdersTable() {
   // Migrate existing tables that predate these columns
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_code TEXT`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_discount NUMERIC(10,2)`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS viewed BOOLEAN NOT NULL DEFAULT false`;
+}
+
+export async function getUnviewedOrderCount(): Promise<number> {
+  const { rows } = await sql`SELECT COUNT(*)::int AS count FROM orders WHERE viewed = false`;
+  return (rows[0] as any)?.count ?? 0;
+}
+
+export async function markAllOrdersViewed(): Promise<void> {
+  await sql`UPDATE orders SET viewed = true WHERE viewed = false`;
 }
 
 export async function orderExistsBySessionId(sessionId: string): Promise<boolean> {
@@ -448,11 +460,6 @@ export async function getOrderById(id: number): Promise<DbOrder | null> {
   return rows[0] || null;
 }
 
-export async function getOrdersAwaitingLabelCount(): Promise<number> {
-  const { rows } = await sql`SELECT COUNT(*)::int AS count FROM orders WHERE status = 'paid'`;
-  return (rows[0] as any)?.count ?? 0;
-}
-
 export async function saveLabelToOrder(id: number, data: {
   shippo_transaction_id: string;
   label_url: string;
@@ -506,6 +513,7 @@ export interface ContactMessage {
   phone: string | null;
   message: string;
   read: boolean;
+  viewed: boolean;
   created_at: string;
 }
 
@@ -518,9 +526,20 @@ export async function createContactMessagesTable() {
       phone TEXT,
       message TEXT NOT NULL,
       read BOOLEAN NOT NULL DEFAULT false,
+      viewed BOOLEAN NOT NULL DEFAULT false,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS viewed BOOLEAN NOT NULL DEFAULT false`;
+}
+
+export async function getUnviewedMessageCount(): Promise<number> {
+  const { rows } = await sql`SELECT COUNT(*)::int AS count FROM contact_messages WHERE viewed = false`;
+  return (rows[0] as any)?.count ?? 0;
+}
+
+export async function markAllMessagesViewed(): Promise<void> {
+  await sql`UPDATE contact_messages SET viewed = true WHERE viewed = false`;
 }
 
 export async function createContactMessage(data: {
@@ -546,11 +565,6 @@ export async function getAllContactMessages(): Promise<ContactMessage[]> {
 
 export async function markContactMessageRead(id: number, read: boolean): Promise<void> {
   await sql`UPDATE contact_messages SET read = ${read} WHERE id = ${id}`;
-}
-
-export async function getUnreadMessageCount(): Promise<number> {
-  const { rows } = await sql`SELECT COUNT(*)::int AS count FROM contact_messages WHERE read = false`;
-  return (rows[0] as any)?.count ?? 0;
 }
 
 export async function deleteContactMessage(id: number): Promise<void> {

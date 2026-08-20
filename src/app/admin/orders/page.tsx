@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 import { getAdminSession } from '@/lib/auth';
-import { getAllOrdersAdmin, createOrdersTable } from '@/lib/db';
+import { getAllOrdersAdmin, createOrdersTable, markAllOrdersViewed } from '@/lib/db';
 import OrdersClient from './OrdersClient';
 
 export default async function AdminOrdersPage() {
@@ -10,6 +10,7 @@ export default async function AdminOrdersPage() {
 
   await createOrdersTable();
   const orders = await getAllOrdersAdmin();
+  await markAllOrdersViewed();
 
   return <OrdersClient orders={orders} adminEmail={session} />;
 }

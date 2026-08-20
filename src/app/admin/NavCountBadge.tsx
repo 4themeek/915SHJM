@@ -8,7 +8,7 @@ export default function NavCountBadge({ endpoint }: { endpoint: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(endpoint)
+    fetch(endpoint, { cache: 'no-store' })
       .then(res => (res.ok ? res.json() : null))
       .then(data => {
         if (!cancelled && data) setCount(data.count);
