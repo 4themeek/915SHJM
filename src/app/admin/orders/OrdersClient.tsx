@@ -18,9 +18,9 @@ interface LineItem {
   amount_total: number;
 }
 
-// Line items include the shipping charge as its own entry (see
-// /api/checkout's "Shipping — {carrier} {service}" line) — that's not a
-// purchased product, so it's excluded from the items list shown here.
+// Line items include the shipping charge and the flat Packaging & Handling
+// fee as their own entries — neither is a purchased product, so both are
+// excluded from the items list shown here.
 function parseLineItems(raw: unknown): LineItem[] {
   let items: any[];
   if (Array.isArray(raw)) items = raw;
@@ -28,7 +28,11 @@ function parseLineItems(raw: unknown): LineItem[] {
     try { items = JSON.parse(raw); } catch { return []; }
   } else return [];
 
-  return items.filter(li => li && !String(li.description || '').startsWith('Shipping'));
+  return items.filter(li => {
+    if (!li) return false;
+    const desc = String(li.description || '');
+    return !desc.startsWith('Shipping') && desc !== 'Packaging & Handling';
+  });
 }
 
 export default function OrdersClient({ orders: initialOrders, adminEmail }: Props) {

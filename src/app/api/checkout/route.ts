@@ -4,6 +4,10 @@ import { createPromoCodesTable, validatePromoCode, getSetting, getProductById } 
 import { getShippingRates } from '@/lib/shippo';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
+// Fixed per-order fee, charged on every order regardless of shipping cost
+// or the free-shipping threshold, and never part of the promo discount base.
+const PACKAGING_HANDLING_FEE = 3.25;
+
 export async function POST(req: NextRequest) {
   const allowed = await checkRateLimit(`checkout:${getClientIp(req)}`, 10, 600);
   if (!allowed) {
@@ -140,6 +144,19 @@ export async function POST(req: NextRequest) {
         quantity: 1,
       });
     }
+
+    // Fixed handling fee on every order — added after shipping, unaffected
+    // by free shipping, and excluded from the promo discount base below.
+    line_items.push({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: 'Packaging & Handling',
+        },
+        unit_amount: Math.round(PACKAGING_HANDLING_FEE * 100),
+      },
+      quantity: 1,
+    });
 
     // Re-validate the promo code server-side — never trust a discount amount
     // supplied by the client. Applied as a one-time Stripe coupon so the
