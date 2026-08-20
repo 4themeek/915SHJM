@@ -1,6 +1,6 @@
 # Sacred Hearts (915SHJM) — Project Status
 
-**Last updated:** August 7, 2026 (live Shippo key confirmed, hardcoded test-key fallback removed)
+**Last updated:** August 20, 2026 (Packaging & Handling fee, multi-category products, "Hearts on Fire" pinning, nav-bubble fix — see section 16; live checkout currently blocked on a Shippo zero-rates issue under investigation)
 **Repo:** github.com/4themeek/915SHJM (main branch, auto-deploys to Vercel)
 **Live site:** https://www.thesacredhearts.org
 **Stack:** Next.js 15, @vercel/postgres (Neon-backed), Stripe, Shippo, Vercel Blob (unused/private — see below)
@@ -297,6 +297,42 @@ No application code changes were needed — the upload route's logic was already
 - `/admin/donations` (`DonationsClient.tsx`) — a table of Date/Time, Donor Name + Email, Amount, Source (Online vs. Table/QR), Status, and a **Send Thank You** button per row. Clicking it POSTs to `/api/admin/donations/[id]/thank-you`, which sends a templated thank-you email via Brevo (`sendDonationThankYouEmail()` in `src/lib/email.ts`, same provider/pattern as the contact-form notification email) and stamps `thank_you_sent_at`; the button then shows "✓ Sent [date]" instead of re-sending.
 - **Not retroactive:** any donations that landed in the `orders` table before this fix stay there — this only changes behavior for donations completed after this deploy. Worth a one-time manual look at `/admin/orders` for old donation-shaped rows (single "Donation —" or "Table Donation —" line item, no shipping address) if historical cleanup ever matters.
 - Verified: `npx tsc --noEmit` clean; dev server compiles all new routes with no errors; unauthenticated `/admin/donations` correctly redirects to `/admin` login and `/api/admin/donations/unread-count` responds without crashing. Full live donation → email flow not exercised end-to-end (local Postgres unreachable in this sandbox, same limitation as every other DB-backed feature built this engagement) — closely mirrors the already-proven `orders`/`OrdersClient` pattern.
+
+---
+
+## 16. August 20, 2026 — Packaging & Handling fee, multi-category products, nav-bubble fix, shipping-rate troubleshooting
+
+A high-volume day of small-to-medium features and fixes, in the order shipped:
+
+### Packaging & Handling fee (new, then made admin-configurable)
+Added a fixed per-order fee, separate from shipping and unaffected by the free-shipping threshold or promo discounts. Shipped in two passes:
+- First pass: hardcoded `$3.25`, added as its own Stripe line item in `/api/checkout` (after shipping, excluded from the promo discount base), displayed in both the checkout Review step and sidebar Order Summary. Admin Orders table's Items-column filter extended to also hide this pseudo-line-item, same as the existing "Shipping —" one.
+- Second pass, same day: made it **admin-configurable** ($0.00–$10.00) via a new "Packaging & Handling Fee" section in `/admin/settings`, mirroring the existing Free Shipping Threshold UI exactly. `/api/checkout` now reads the setting fresh per request (clamped to the $0–$10 range) instead of using the hardcoded value, falling back to $3.25 if never configured.
+- **Bonus fix found along the way:** `/api/admin/settings`'s `GET` required admin login, but the public checkout page was already calling it client-side to display the free-shipping threshold — meaning that fetch had been silently 401'ing for every real visitor the whole time, always falling back to a hardcoded `$50` display regardless of what was actually configured. Made `GET` public (writes via `POST` still require admin auth) since it only exposes non-sensitive display values already shown publicly on the FAQ and homepage. This was necessary for the new fee setting to reach real customers, and incidentally fixes the free-shipping-threshold display too.
+- Added a note about this fee to every place the site mentions free shipping (FAQ, `/shipping`, homepage info card, cart drawer caption), plus renamed "Shipping" to "Carrier Shipping" in the checkout sidebar to disambiguate it from the new fee.
+
+### Multi-category products (up to 5 per product)
+- New `categories TEXT[]` column on `products` (`src/lib/db.ts`), backfilled once from each product's existing `cat` value. `cat` is kept as the "primary" category (`categories[0]`), derived server-side, never trusted from raw client input — so every existing single-category display spot (product cards, checkout summary, product detail pages) kept working unchanged with zero further edits.
+- Admin product edit form (`ProductForm.tsx`): category `<select>` replaced with a checkbox list capped at 5, with a live "X/5 selected" counter. The "Create New Category" field now has an Add button/Enter-to-add instead of only taking effect on form submit, and — since the checkbox list is rebuilt from the union of every product's `categories` array — any newly created category is immediately available as an option on every future product edit.
+- `/shop` and the admin Products list now filter a product into *any* of its selected categories, not just its primary one.
+- Follow-up fix same day: the admin Products list's "Category" column was still only showing the single primary category even after a product had 3–4 more checked — updated to render a badge per category (wrapping onto multiple lines as needed).
+
+### "Hearts on Fire" — pin-to-top category
+New special category, always offered as a selectable checkbox in the admin product form (even before any product uses it — normal categories only appear once at least one product has them), labeled "— Top of page in Shop" in gold. Any product tagged with it sorts to the very top of the `/shop` grid, and stays pinned first even within any *other* category filter it also belongs to. Implemented as a stable sort in `ShopClient.tsx`, so relative order among non-pinned products is unaffected.
+
+### Admin nav bubbles not clearing after viewing — fixed
+User reported the Orders, Donations Rec'd, and Messages nav bubbles weren't resetting after visiting those pages. Two distinct causes:
+1. **Staleness risk across all three** (including Donations, which was already supposed to auto-clear): the count fetches (client-side `fetch()` and the three `/api/admin/*/unread-count` / `awaiting-count` routes) had no explicit cache directives. Added `cache: 'no-store'` client-side and `export const dynamic = 'force-dynamic'` + `Cache-Control: no-store` on every count route, so the badge is never served a stale cached count.
+2. **Real design gap for Messages and Orders**: unlike Donations, those two only ever cleared on a specific action (marking a message read, creating a shipping label) — simply viewing the page did nothing. Added a dedicated `viewed` boolean column to both `contact_messages` and `orders` (kept separate from the existing `read` boolean and `status` field respectively, so neither the Read/Unread workflow nor Create Label logic changed at all), marked all-viewed on page load exactly like Donations already did.
+- **Known behavior change:** the Orders bubble used to mean "orders still awaiting a label" (an actionable backlog count); it now means "orders you haven't looked at since they arrived" — flagged to the user as a trade-off, not yet asked to revert.
+
+### Content additions
+- New "Saint John Eudes and Devotion to the Sacred Hearts" section added to `/immaculate-heart`, right after the "Eight Centuries of Devotion" timeline — covers his role as founder of the liturgical Sacred Hearts devotion, canonization, and feast day (Aug 19).
+
+### Open issue — Shippo returning zero shipping rates at checkout
+User hit "No rates available for this address. Please contact us for shipping options." after address verification during a real checkout attempt. Root-caused the *code-level* gap — `getShippingRates()` (`src/lib/shippo.ts`) was silently discarding Shippo's shipment response whenever it came back with zero rates, with no logging of why. Added logging of the shipment's `status`, `messages`, and full raw response so the actual reason will show up in Vercel's function logs next time this happens.
+
+**Most likely underlying cause, not yet confirmed:** this is very plausibly the *first* real rate-fetching call against the **live** Shippo account — the hardcoded test-key fallback (which always fabricates synthetic rates for any address) was only removed on August 7, and the only checkout placed since then (the Aug 6 test order referenced in section 14) actually predates that removal. If the live Shippo account's carrier accounts (USPS/UPS) aren't fully connected/funded, live rate requests return empty. **Next step:** user to retry a test checkout, then check Vercel logs for the new `Shippo returned no rates for address...` line, which will show Shippo's actual status/messages instead of guessing further.
 
 ---
 

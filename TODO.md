@@ -4,6 +4,10 @@ Actionable, outstanding items only. For full context, architecture, and "why" on
 
 ---
 
+## 🔴 Active blocker — checkout showing "No rates available for this address"
+
+- [ ] **Shippo returning zero live shipping rates.** User hit this on a real checkout attempt after address verification succeeded. Root-caused the code-level gap: `getShippingRates()` (`src/lib/shippo.ts`) silently discarded Shippo's response whenever it came back with zero rates, with no logging of why — fixed, now logs the shipment's status/messages/full response. **Not yet root-caused on the Shippo side.** Most likely explanation: this may be the first real rate-fetch against the **live** Shippo account since the test-key fallback (which fabricated synthetic rates for any address) was removed on Aug 7 — if the live account's carrier accounts (USPS/UPS) aren't fully connected or funded, live requests return empty. **Next step:** retry a test checkout, then check Vercel logs for the new `Shippo returned no rates for address...` line; also worth checking the Shippo dashboard's Settings → Carrier Accounts for USPS/UPS connection status.
+
 ## Order tracking system — config steps (code is merged, LIVE and confirmed working)
 
 - [x] Register a Stripe webhook + add `STRIPE_WEBHOOK_SECRET` to Vercel — **DONE**, confirmed present in Vercel env vars (Production + Preview).
@@ -19,6 +23,11 @@ Actionable, outstanding items only. For full context, architecture, and "why" on
 - [x] **Sticky orders table header — DONE.** `/admin/orders`'s column titles now stay pinned below the nav bar while scrolling past 50+ rows, instead of scrolling away with the page.
 - [x] **"Donations Rec'd" admin panel — DONE.** New nav item (all 5 admin pages) with an unread-count bubble, opening `/admin/donations`: a report of every `/donate` and `/give` (table QR) donation — date/time, donor name/email, amount, source, status, and a "Send Thank You" button that emails a templated thank-you via Brevo. **Also fixed a real bug found along the way:** donations were previously being written into the `orders` table (blank shipping fields, a fake weight, a nonsensical "Create Label" button) because the webhook never branched on donation vs. purchase. They now go into their own `donations` table instead. Not retroactive — old donation-shaped rows already in `orders` (single "Donation —"/"Table Donation —" line item, no shipping address) stay there unless manually cleaned up.
 - [ ] **Not yet confirmed live:** place a real (or Stripe test-mode) donation via `/donate` or `/give`, confirm it appears in `/admin/donations` (not `/admin/orders`), the nav bubble increments, and "Send Thank You" actually delivers an email.
+- [x] **Packaging & Handling fee — DONE, and made admin-configurable.** Fixed $0–$10 fee added to every order after shipping, unaffected by free shipping or promo codes. Now set via a new section in `/admin/settings`, read fresh by `/api/checkout` on every request. Bonus fix: `/api/admin/settings`'s GET no longer requires admin login (was silently 401'ing for real checkout visitors this whole time, breaking the free-shipping-threshold display too — not just the new fee).
+- [x] **Up to 5 categories per product — DONE.** Admin product edit form's category dropdown is now a checkbox list (max 5); any newly created category is immediately available on future edits. `/shop` and the admin Products list filter into any of a product's categories, not just the primary one. Admin Products list's Category column now shows all of them, not just one (follow-up fix same day).
+- [x] **"Hearts on Fire" pin-to-top category — DONE.** Always-selectable category that pins tagged products to the top of `/shop`, including within other category filters they also belong to.
+- [x] **Admin nav bubbles not clearing after viewing — DONE.** Fixed a caching gap (all three bubbles) plus added real view-based clearing for Messages and Orders (previously only cleared on explicit action — mark read / create label). Orders' bubble now means "unviewed since arrival," not "still needs a label" — flag to the user if that trade-off isn't wanted.
+- [ ] **Not yet confirmed live:** verify the Packaging & Handling fee, multi-category checkboxes, and "Hearts on Fire" pinning all behave correctly against the real production database (none of today's admin-panel work could be exercised live in this sandbox — no DB access here).
 
 ## Future feature ideas
 
