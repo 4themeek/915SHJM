@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Product } from '@/lib/products';
+import { Product, TOP_OF_SHOP_CATEGORY } from '@/lib/products';
 import ProductCard from '@/components/ProductCard';
 import styles from './shop.module.css';
 
@@ -13,10 +13,17 @@ interface Props {
 export default function ShopClient({ products, categories }: Props) {
   const [activeFilter, setActiveFilter] = useState('All');
 
-  const filtered =
+  function isTopOfShop(p: Product) {
+    return (p.categories?.length ? p.categories : [p.cat]).includes(TOP_OF_SHOP_CATEGORY);
+  }
+
+  const filtered = (
     activeFilter === 'All'
       ? products
-      : products.filter((p) => (p.categories?.length ? p.categories : [p.cat]).includes(activeFilter));
+      : products.filter((p) => (p.categories?.length ? p.categories : [p.cat]).includes(activeFilter))
+  )
+    .slice()
+    .sort((a, b) => Number(isTopOfShop(b)) - Number(isTopOfShop(a)));
 
   return (
     <section className="section">

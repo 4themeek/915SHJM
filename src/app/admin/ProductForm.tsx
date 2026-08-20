@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DbProduct } from '@/lib/db';
+import { TOP_OF_SHOP_CATEGORY } from '@/lib/products';
 import styles from './admin.module.css';
 import ImageUploader from './ImageUploader';
 
@@ -201,7 +202,7 @@ export default function ProductForm({ product, categories }: Props) {
                   </span>
                 </label>
                 <div className={styles.toggleRow}>
-                  {categories.filter(c => c !== 'All').map(c => {
+                  {Array.from(new Set([...categories.filter(c => c !== 'All'), TOP_OF_SHOP_CATEGORY])).map(c => {
                     const checked = form.categories.includes(c);
                     const disabled = !checked && form.categories.length >= MAX_CATEGORIES;
                     return (
@@ -212,7 +213,12 @@ export default function ProductForm({ product, categories }: Props) {
                           disabled={disabled}
                           onChange={() => toggleCategory(c)}
                         />
-                        <span className={styles.toggleLabel}>{c}</span>
+                        <span className={styles.toggleLabel}>
+                          {c}
+                          {c === TOP_OF_SHOP_CATEGORY && (
+                            <span style={{ color: 'var(--gold-dark)', fontWeight: 600 }}> — Top of page in Shop</span>
+                          )}
+                        </span>
                       </label>
                     );
                   })}

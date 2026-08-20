@@ -6,6 +6,12 @@
 // img, desc, sale, and optionally outOfStock or isFree.
 // ============================================================
 
+// Any product tagged with this category is pinned to the top of the /shop
+// grid (and the top of any other category filter it also belongs to),
+// ahead of all non-tagged products. Always offered as a selectable
+// category in the admin product form, even before any product uses it.
+export const TOP_OF_SHOP_CATEGORY = 'Hearts on Fire';
+
 export interface Product {
   id: number;
   name: string;
