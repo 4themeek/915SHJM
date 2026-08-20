@@ -622,7 +622,7 @@ export default function CheckoutClient() {
                 </div>
               )}
               <div className={styles.summaryRow}>
-                <span>Shipping</span>
+                <span>Carrier Shipping</span>
                 <span>{selectedRate ? (effectiveShipping === 0 ? 'Free' : `$${effectiveShipping.toFixed(2)}`) : '—'}</span>
               </div>
               <div className={styles.summaryRow}>
