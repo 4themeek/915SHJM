@@ -72,6 +72,16 @@ export async function getShippingRates(address: AddressInput, weightOz: number):
     async: false,
   });
 
+  if (!shipment.rates || shipment.rates.length === 0) {
+    console.error(
+      'Shippo returned no rates for address',
+      `${address.city}, ${address.state} ${address.zip}`,
+      '— shipment status:', shipment.status,
+      '— messages:', JSON.stringify(shipment.messages || []),
+      '— full response:', JSON.stringify(shipment)
+    );
+  }
+
   return (shipment.rates || [])
     .filter((r: any) => r.amount && parseFloat(r.amount) > 0)
     .map((r: any) => ({
