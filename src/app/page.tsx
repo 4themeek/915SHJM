@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 function buildInfoCards(freeShippingThreshold: string) {
   return [
-    { icon: '✦', title: 'Free Shipping', desc: `Orders over $${freeShippingThreshold} qualify to ship free within the United States` },
+    { icon: '✦', title: 'Free Shipping', desc: `Orders over $${freeShippingThreshold} qualify to ship free within the United States. A small fee for Packaging and Handling costs is still applied and separate from the carrier transport costs that are credited on free shipping amounts.` },
     { icon: '✝', title: 'Tax-Deductible', desc: '501(c)3 nonprofit donations' },
     { icon: '♥', title: 'Reduced Rates', desc: 'Financial assistance available — just contact us' },
     { icon: '☎', title: 'Personal Service - Call Us!', desc: 'Mon–Fri 10–5 EST · 513.741.3400' },

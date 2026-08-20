@@ -18,7 +18,9 @@ export default function ShippingPage() {
         <p>
           Most of our prints and plaques ship free within the United States. Orders are typically
           processed within 2–3 business days and shipped via USPS or UPS. Delivery generally takes
-          5–10 business days from the date of shipment.
+          5–10 business days from the date of shipment. A small fee for Packaging and Handling costs
+          is still applied and separate from the carrier transport costs that are credited on free
+          shipping amounts.
         </p>
         <p>
           For expedited shipping or international orders, please contact us directly at{' '}

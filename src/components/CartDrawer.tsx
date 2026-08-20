@@ -77,16 +77,22 @@ export default function CartDrawer() {
         {cart.length > 0 && (
           <div className={styles.footer}>
             {freeShippingThreshold > 0 && (
-              <p className={styles.shippingProgress}>
-                {amountToFreeShipping > 0 ? (
-                  <>
-                    Add ${amountToFreeShipping.toFixed(2)} more to qualify for free shipping<br />
-                    (orders over ${freeShippingThreshold.toFixed(2).replace(/\.00$/, '')})
-                  </>
-                ) : (
-                  '✦ Your order qualifies for free shipping!'
-                )}
-              </p>
+              <>
+                <p className={styles.shippingProgress}>
+                  {amountToFreeShipping > 0 ? (
+                    <>
+                      Add ${amountToFreeShipping.toFixed(2)} more to qualify for free shipping<br />
+                      (orders over ${freeShippingThreshold.toFixed(2).replace(/\.00$/, '')})
+                    </>
+                  ) : (
+                    '✦ Your order qualifies for free shipping!'
+                  )}
+                </p>
+                <p className={styles.handlingNote}>
+                  A small fee for Packaging and Handling costs is still applied and separate from the
+                  carrier transport costs that are credited on free shipping amounts.
+                </p>
+              </>
             )}
             <div className={styles.total}>
               <span>Estimated Total</span>
