@@ -32,8 +32,8 @@ export default function AboutPage() {
 
       <div className={styles.papalSection}>
         <div className={styles.papalGrid}>
-          <div className={styles.papalImg}>
-            <Image src="/mother-teresa-letter.png" alt="1991 handwritten-signed letter from Mother Teresa of Calcutta thanking The Sacred Hearts ministry for Sacred Heart images sent to Albania and Calcutta" fill sizes="(max-width: 768px) 100vw, 40vw" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+          <div className={styles.papalImg} style={{ background: 'var(--cream)' }}>
+            <Image src="/mother-teresa-letter.png" alt="1991 handwritten-signed letter from Mother Teresa of Calcutta thanking The Sacred Hearts ministry for Sacred Heart images sent to Albania and Calcutta" fill sizes="(max-width: 768px) 100vw, 40vw" style={{ objectFit: 'contain', objectPosition: 'center' }} />
           </div>
           <div className={styles.papalText}>
             <p className={styles.papalEyebrow}>✦ A Treasured Heritage ✦</p>
