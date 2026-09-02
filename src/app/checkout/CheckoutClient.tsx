@@ -83,8 +83,13 @@ export default function CheckoutClient() {
     }).catch(() => {});
   });
 
+  // Prefer each item's real, admin-editable weight (already present on
+  // cart items mapped from the DB) over the static PRODUCT_WEIGHTS table,
+  // which was only ever a one-time seed value and goes stale the moment a
+  // product's weight is edited in the admin panel — the mismatch was
+  // quoting shipping using far heavier weights than products actually are.
   const totalWeightOz = cart.reduce((sum, item) => {
-    return sum + (PRODUCT_WEIGHTS[item.id] || 8) * item.qty;
+    return sum + (item.weight_oz || PRODUCT_WEIGHTS[item.id] || 8) * item.qty;
   }, 0);
 
   const allFreeShipping = cart.every(item => item.sale);

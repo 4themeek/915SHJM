@@ -24,6 +24,7 @@ export interface Product {
   sale: boolean;
   outOfStock?: boolean;
   isFree?: boolean;
+  weight_oz?: number;
 }
 
 export const PRODUCTS: Product[] = [
