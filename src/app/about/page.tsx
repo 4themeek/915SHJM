@@ -82,6 +82,20 @@ export default function AboutPage() {
         </div>
       </div>
 
+      <div className={styles.papalSection}>
+        <div className={styles.papalGrid}>
+          <div className={styles.papalImg}>
+            <Image src="/mother-teresa-letter.png" alt="1991 handwritten-signed letter from Mother Teresa of Calcutta thanking The Sacred Hearts ministry for Sacred Heart images sent to Albania and Calcutta" fill sizes="(max-width: 768px) 100vw, 40vw" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+          </div>
+          <div className={styles.papalText}>
+            <p className={styles.papalEyebrow}>✦ A Treasured Heritage ✦</p>
+            <h2>A Letter from Saint Mother Teresa of Calcutta</h2>
+            <p>Among the most treasured items in our ministry&apos;s history is this original letter from Saint Mother Teresa of Calcutta, dated December 7, 1991 and personally signed by her — the very letter still safeguarded in our office today. Because it bears her own signature, it is regarded as a third-class relic, an item that was touched by a saint. In it, she thanks our ministry by name for the many images of the Sacred Heart of Jesus and the Immaculate Heart of Mary we had sent to be distributed among the poor of Albania and Calcutta, noting that the pictures were being carried on to families throughout India and put up in their homes as an expression of their own devotion.</p>
+            <p>She closed with a prayer for our ministry and our families, asking that Our Lady draw us ever deeper into the Heart of her Son — a blessing we continue to hold close as we carry this same mission forward today.</p>
+          </div>
+        </div>
+      </div>
+
       <div className="content-block" style={{ maxWidth: '800px' }}>
         <h2>501(c)3 Status</h2>
         <p>We are a registered 501(c)3 nonprofit organization. Every purchase made through our shop is a tax-deductible donation that goes directly back to supporting and expanding our ministry. We are grateful for every order and every prayer offered on our behalf.</p>
