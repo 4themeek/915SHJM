@@ -317,15 +317,21 @@ export default function AdminSettingsClient({ freeShippingThreshold, packagingHa
                   </tr>
                 </thead>
                 <tbody>
-                  {promoCodes.map(p => (
-                    <tr key={p.id} className={`${styles.tr} ${!p.active ? styles.trInactive : ''}`}>
+                  {promoCodes.map(p => {
+                    const expired = !!p.expires_at && new Date(p.expires_at) < new Date();
+                    return (
+                    <tr key={p.id} className={`${styles.tr} ${(!p.active || expired) ? styles.trInactive : ''}`}>
                       <td className={styles.td}><strong>{p.code}</strong></td>
                       <td className={styles.td}>{discountDisplay(p)}</td>
                       <td className={styles.td}>{p.min_order ? `$${Number(p.min_order).toFixed(2)}` : '—'}</td>
                       <td className={styles.td}>{p.expires_at ? String(p.expires_at).substring(0, 10) : '—'}</td>
                       <td className={styles.td}>{p.uses}{p.max_uses ? ` / ${p.max_uses}` : ''}</td>
                       <td className={styles.td}>
-                        {p.active ? <span className={styles.badgeActive}>Active</span> : <span className={styles.badgeHidden}>Disabled</span>}
+                        {!p.active
+                          ? <span className={styles.badgeHidden}>Disabled</span>
+                          : expired
+                            ? <span className={styles.badgeOos}>Expired</span>
+                            : <span className={styles.badgeActive}>Active</span>}
                       </td>
                       <td className={styles.td}>
                         <div className={styles.actions}>
@@ -336,7 +342,7 @@ export default function AdminSettingsClient({ freeShippingThreshold, packagingHa
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  );})}
                 </tbody>
               </table>
             )}
