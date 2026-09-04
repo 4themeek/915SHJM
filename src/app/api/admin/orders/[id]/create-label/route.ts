@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/auth';
 import { getOrderById, saveLabelToOrder } from '@/lib/db';
+import { sendShippingNotificationEmail } from '@/lib/email';
 
 const SHIPPO_API_KEY = process.env.SHIPPO_API_KEY || '';
 
@@ -137,6 +138,17 @@ export async function POST(req: NextRequest, { params }: Props) {
     tracking_url: transaction.tracking_url_provider || null,
     carrier,
   });
+
+  if (updated.customer_email && updated.tracking_number) {
+    await sendShippingNotificationEmail({
+      orderId: updated.id,
+      customerName: updated.customer_name,
+      customerEmail: updated.customer_email,
+      carrier: updated.carrier || carrier,
+      trackingNumber: updated.tracking_number,
+      trackingUrl: updated.tracking_url,
+    });
+  }
 
   return NextResponse.json({ success: true, order: updated });
 }

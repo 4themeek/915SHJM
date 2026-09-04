@@ -4,6 +4,7 @@ import {
   createOrdersTable, orderExistsBySessionId, createOrder, incrementPromoUses,
   createDonationsTable, donationExistsBySessionId, createDonation,
 } from '@/lib/db';
+import { sendOrderConfirmationEmail } from '@/lib/email';
 
 const DONATION_TYPES = new Set(['donation', 'table_donation']);
 
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100 });
 
-    await createOrder({
+    const order = await createOrder({
       stripe_session_id: session.id,
       stripe_payment_intent:
         typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id || null,
@@ -88,6 +89,25 @@ export async function POST(req: NextRequest) {
 
     if (meta.promo_code) {
       await incrementPromoUses(meta.promo_code);
+    }
+
+    if (order.customer_email) {
+      const orderLineItems = Array.isArray(order.line_items)
+        ? order.line_items
+        : (() => { try { return JSON.parse(order.line_items as any) || []; } catch { return []; } })();
+
+      await sendOrderConfirmationEmail({
+        orderId: order.id,
+        customerName: order.customer_name,
+        customerEmail: order.customer_email,
+        amountTotal: Number(order.amount_total),
+        lineItems: orderLineItems,
+        shippingStreet1: order.shipping_street1,
+        shippingStreet2: order.shipping_street2,
+        shippingCity: order.shipping_city,
+        shippingState: order.shipping_state,
+        shippingZip: order.shipping_zip,
+      });
     }
   }
 
